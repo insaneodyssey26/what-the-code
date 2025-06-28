@@ -112,10 +112,12 @@ Choose based on your hardware:
 - Pull the model: `ollama pull codellama:7b-instruct`
 - Restart Ollama server: `ollama serve`
 
-### "Cannot connect to Ollama server"
-- Make sure Ollama is installed and running (`ollama serve`)
-- Check the endpoint URL in settings
-- Verify the model is pulled (`ollama pull codellama:7b-instruct`)
+## Performance Tips
+
+- **Start with 7b model**: Good balance of speed and accuracy
+- **Keep Ollama running**: Leave `ollama serve` running for faster responses
+- **Limit file sizes**: Use smaller maxFileSize for faster processing
+- **Focus search**: Use more specific queries for better results
 
 ## Development
 
@@ -123,6 +125,7 @@ This extension is built with:
 - TypeScript
 - VS Code Extension API
 - Axios for HTTP requests
+- Local Ollama integration
 - Modular architecture for easy maintenance
 
 ## Contributing
@@ -130,7 +133,7 @@ This extension is built with:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly with local Ollama setup
 5. Submit a pull request
 
 ## License
@@ -149,4 +152,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-**Happy coding!** 🚀 Ask your code anything and let AI help you navigate your codebase faster than ever.
+**Happy coding!** 🚀 Ask your code anything and let local AI help you navigate your codebase faster than ever, with complete privacy.
