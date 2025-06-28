@@ -55,7 +55,7 @@
         "command": "what-the-code.saveSnapshot",
         "title": "📌 Save Snapshot",
         "category": "What-The-Code",
-        "icon": "$(camera)"
+        "icon": "$(save)"
       },
       {
         "command": "what-the-code.openSnapshot",
@@ -90,17 +90,20 @@
         {
           "id": "what-the-code-commands",
           "name": "Commands",
-          "when": "true"
+          "when": "true",
+          "icon": "$(symbol-misc)"
         },
         {
           "id": "what-the-code-results",
           "name": "Search Results",
-          "when": "true"
+          "when": "true",
+          "icon": "$(search-view-icon)"
         },
         {
           "id": "what-the-code-snapshots",
           "name": "Code Snapshots",
-          "when": "true"
+          "when": "true",
+          "icon": "$(save-all)"
         }
       ]
     },
@@ -113,6 +116,12 @@
           "icon": "$(search)"
         },
         {
+          "command": "what-the-code.saveSnapshot",
+          "when": "view == what-the-code-commands",
+          "group": "navigation",
+          "icon": "$(save)"
+        },
+        {
           "command": "what-the-code.clearResults",
           "when": "view == what-the-code-results",
           "group": "navigation",
@@ -122,7 +131,7 @@
           "command": "what-the-code.saveSnapshot",
           "when": "view == what-the-code-snapshots",
           "group": "navigation",
-          "icon": "$(camera)"
+          "icon": "$(save)"
         },
         {
           "command": "what-the-code.clearAllSnapshots",
