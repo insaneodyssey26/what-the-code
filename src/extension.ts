@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CodeCollector } from './codeCollector';
-import { OllamaProvider, GeminiProvider, PromptBuilder } from './aiProviders';
+import { GeminiProvider, PromptBuilder } from './aiProviders';
 import { SearchResult, AIProvider } from './types';
 
 async function displayResults(query: string, results: SearchResult[]) {
@@ -95,25 +95,16 @@ class CodeSearchProvider {
 	}
 
 	private getAIProvider(): AIProvider {
-		const aiProvider = this.config.get<string>('aiProvider', 'gemini');
+		let apiKey = this.config.get<string>('geminiApiKey', '');
+		const model = this.config.get<string>('geminiModel', 'gemini-1.5-flash');
 		
-		if (aiProvider === 'gemini') {
-			let apiKey = this.config.get<string>('geminiApiKey', '');
-			const model = this.config.get<string>('geminiModel', 'gemini-1.5-flash');
-			
-			// Temporary: Use hardcoded API key for testing
-			if (!apiKey) {
-				apiKey = 'AIzaSyBns_LbYTvuRBR3RQ-T9pXfJBTK0LdjOfI';
-				console.log('Using hardcoded API key for testing');
-			}
-			
-			return new GeminiProvider(apiKey, model);
-		} else {
-			// Fallback to Ollama
-			const endpoint = this.config.get<string>('ollamaEndpoint', 'http://localhost:11434');
-			const model = this.config.get<string>('ollamaModel', 'codellama:7b-instruct');
-			return new OllamaProvider(endpoint, model);
+		// Temporary: Use hardcoded API key for testing
+		if (!apiKey) {
+			apiKey = 'AIzaSyBns_LbYTvuRBR3RQ-T9pXfJBTK0LdjOfI';
+			console.log('Using hardcoded API key for testing');
 		}
+		
+		return new GeminiProvider(apiKey, model);
 	}
 
 	private parseResults(response: string): SearchResult[] {
@@ -208,13 +199,6 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log('🔍 Search command triggered!');
 		
 		try {
-			const config = vscode.workspace.getConfiguration('whatTheCode');
-			const endpoint = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
-			const model = config.get<string>('ollamaModel', 'codellama:7b-instruct');
-			console.log(`Ollama config: ${endpoint}, model: ${model}`);
-			
-			console.log('Checking Ollama availability...');
-
 			console.log('Opening search dialog...');
 			const query = await vscode.window.showInputBox({
 				placeHolder: 'e.g., "Where is user authentication handled?"',
@@ -272,38 +256,6 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showWarningMessage("This command is deprecated and will be removed.");
 	});
 
-	const testOllamaCommand = vscode.commands.registerCommand('what-the-code.testOllama', async () => {
-		const config = vscode.workspace.getConfiguration('whatTheCode');
-		const endpoint = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
-		const model = config.get<string>('ollamaModel', 'codellama:7b-instruct');
-		
-		await vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,
-			title: 'Testing Ollama connection...',
-			cancellable: false
-		}, async (progress) => {
-			try {
-				progress.report({ increment: 30, message: 'Connecting to Ollama...' });
-				
-				const testProvider = new OllamaProvider(endpoint, model);
-				const testPrompt = '<INST>Say "Hello from CodeLlama!" and nothing else.</INST>';
-				
-				progress.report({ increment: 60, message: 'Testing model response...' });
-				const response = await testProvider.query(testPrompt);
-				
-				progress.report({ increment: 100, message: 'Success!' });
-				
-				vscode.window.showInformationMessage(
-					`✅ Ollama connection successful!\n\nEndpoint: ${endpoint}\nModel: ${model}\nResponse: ${response.substring(0, 100)}...`
-				);
-			} catch (error: any) {
-				vscode.window.showErrorMessage(
-					`❌ Ollama connection failed: ${error.message}\n\nMake sure:\n1. Ollama is running (ollama serve)\n2. Model is pulled (ollama pull ${model})`
-				);
-			}
-		});
-	});
-
 	const testGeminiCommand = vscode.commands.registerCommand('what-the-code.testGemini', async () => {
 		const config = vscode.workspace.getConfiguration('whatTheCode');
 		let apiKey = config.get<string>('geminiApiKey', '');
@@ -353,7 +305,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testOllamaCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }
