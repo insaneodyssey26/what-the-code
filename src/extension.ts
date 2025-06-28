@@ -3,6 +3,7 @@ import { CodeCollector } from './codeCollector';
 import { GeminiProvider, PromptBuilder } from './aiProviders';
 import { SearchResult, AIProvider } from './types';
 import { SearchResultsProvider } from './searchResultsProvider';
+import { SnapshotProvider } from './snapshotProvider';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	// Update the tree view with results
@@ -249,6 +250,13 @@ export function activate(context: vscode.ExtensionContext) {
 		showCollapseAll: true
 	});
 
+	// Create and register the snapshots tree view provider
+	const snapshotProvider = new SnapshotProvider(context);
+	vscode.window.createTreeView('what-the-code-snapshots', {
+		treeDataProvider: snapshotProvider,
+		showCollapseAll: true
+	});
+
 	const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
 		console.log('🔍 Search command triggered!');
 		
@@ -364,6 +372,23 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('workbench.action.openSettings', 'whatTheCode');
 	});
 
+	// Register snapshot commands
+	const saveSnapshotCommand = vscode.commands.registerCommand('what-the-code.saveSnapshot', async () => {
+		await snapshotProvider.saveSnapshot();
+	});
+
+	const openSnapshotCommand = vscode.commands.registerCommand('what-the-code.openSnapshot', async (snapshot) => {
+		await snapshotProvider.openSnapshot(snapshot);
+	});
+
+	const deleteSnapshotCommand = vscode.commands.registerCommand('what-the-code.deleteSnapshot', async (snapshot) => {
+		await snapshotProvider.deleteSnapshot(snapshot);
+	});
+
+	const clearAllSnapshotsCommand = vscode.commands.registerCommand('what-the-code.clearAllSnapshots', async () => {
+		snapshotProvider.clearAllSnapshots();
+	});
+
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	statusBarItem.text = '$(search) Ask Code';
 	statusBarItem.command = 'what-the-code.searchCode';
@@ -371,7 +396,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }

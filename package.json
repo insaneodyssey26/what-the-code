@@ -18,32 +18,62 @@
       {
         "command": "what-the-code.searchCode",
         "title": "Ask Your Code",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(search)"
       },
       {
         "command": "what-the-code.testExtension",
         "title": "Test Extension",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(beaker)"
       },
       {
         "command": "what-the-code.testGemini", 
         "title": "Test Gemini Connection",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(plug)"
       },
       {
         "command": "what-the-code.openSettings",
         "title": "Configure Settings",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(settings-gear)"
       },
       {
         "command": "what-the-code.openResult",
         "title": "Open Search Result",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(go-to-file)"
       },
       {
         "command": "what-the-code.clearResults",
         "title": "Clear Search Results",
-        "category": "What-The-Code"
+        "category": "What-The-Code",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "what-the-code.saveSnapshot",
+        "title": "📌 Save Snapshot",
+        "category": "What-The-Code",
+        "icon": "$(camera)"
+      },
+      {
+        "command": "what-the-code.openSnapshot",
+        "title": "Open Snapshot",
+        "category": "What-The-Code",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "what-the-code.deleteSnapshot",
+        "title": "Delete Snapshot",
+        "category": "What-The-Code",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "what-the-code.clearAllSnapshots",
+        "title": "Clear All Snapshots",
+        "category": "What-The-Code",
+        "icon": "$(clear-all)"
       }
     ],
     "viewsContainers": {
@@ -66,6 +96,11 @@
           "id": "what-the-code-results",
           "name": "Search Results",
           "when": "true"
+        },
+        {
+          "id": "what-the-code-snapshots",
+          "name": "Code Snapshots",
+          "when": "true"
         }
       ]
     },
@@ -82,6 +117,26 @@
           "when": "view == what-the-code-results",
           "group": "navigation",
           "icon": "$(clear-all)"
+        },
+        {
+          "command": "what-the-code.saveSnapshot",
+          "when": "view == what-the-code-snapshots",
+          "group": "navigation",
+          "icon": "$(camera)"
+        },
+        {
+          "command": "what-the-code.clearAllSnapshots",
+          "when": "view == what-the-code-snapshots",
+          "group": "navigation",
+          "icon": "$(clear-all)"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "what-the-code.deleteSnapshot",
+          "when": "view == what-the-code-snapshots && viewItem == snapshot",
+          "group": "inline",
+          "icon": "$(trash)"
         }
       ]
     },

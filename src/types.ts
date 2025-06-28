@@ -28,3 +28,12 @@ export interface SearchOptions {
 export interface LLMResponse {
 	results: SearchResult[];
 }
+
+export interface CodeSnapshot {
+	id: string;
+	timestamp: Date;
+	filePath: string;
+	fileName: string;
+	content: string;
+	language: string;
+}
