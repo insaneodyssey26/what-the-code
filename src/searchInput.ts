@@ -13,7 +13,6 @@ export class SearchInput {
 			quickPick.ignoreFocusOut = false;
 			quickPick.canSelectMany = false;
 			
-			// Add example queries focused on UI/UX development
 			const examples = [
 				{
 					label: '$(react) React components that handle forms',
@@ -61,10 +60,8 @@ export class SearchInput {
 
 			quickPick.onDidChangeValue((value) => {
 				if (value.trim().length > 0) {
-					// Clear examples when user starts typing
 					quickPick.items = [];
 				} else {
-					// Show examples again when input is empty
 					quickPick.items = examples;
 				}
 			});
@@ -76,7 +73,6 @@ export class SearchInput {
 				if (value) {
 					resolve(value);
 				} else if (selected && (selected.detail === 'Example query' || selected.detail?.includes('query'))) {
-					// Extract query from example label
 					const query = selected.label.replace(/^\$\([^)]+\)\s*/, '');
 					resolve(query);
 				}
@@ -89,7 +85,6 @@ export class SearchInput {
 				quickPick.dispose();
 			});
 
-			// Add keyboard shortcuts info
 			quickPick.items = [
 				...examples,
 				{

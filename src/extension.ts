@@ -25,14 +25,12 @@ async function displayResults(query: string, results: SearchResult[]) {
 		const range = new vscode.Range(line - 1, 0, line - 1, 0);
 		editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 		
-		// Highlight the line
 		const decorationType = vscode.window.createTextEditorDecorationType({
 			backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
 			isWholeLine: true
 		});
 		editor.setDecorations(decorationType, [range]);
 		
-		// Remove decoration after a delay
 		setTimeout(() => decorationType.dispose(), 3000);
 	}
 }
@@ -53,7 +51,6 @@ class CodeSearchProvider {
 			this.outputChannel.appendLine(`🔍 Searching for: "${query}"`);
 			this.outputChannel.show(true);
 
-			// Collect and prioritize code files
 			const allFiles = await this.codeCollector.collectCodeFiles();
 			this.outputChannel.appendLine(`📁 Found ${allFiles.length} code files`);
 
@@ -65,23 +62,18 @@ class CodeSearchProvider {
 			const relevantFiles = this.codeCollector.prioritizeFiles(allFiles, query);
 			this.outputChannel.appendLine(`🎯 Selected ${relevantFiles.length} most relevant files`);
 
-			// Prepare context for LLM
 			const context = PromptBuilder.buildContextSection(relevantFiles);
 			
-			// Use CodeLlama-optimized prompt for Ollama
 			const prompt = PromptBuilder.buildCodeSearchPrompt(query, context);
 				
 			this.outputChannel.appendLine(`📝 Prepared prompt (${prompt.length} characters)`);
 
-			// Get AI provider
 			const aiProvider = this.getAIProvider();
 			this.outputChannel.appendLine(`🤖 Using ${aiProvider.name} provider`);
 
-			// Query LLM
 			const response = await aiProvider.query(prompt);
 			this.outputChannel.appendLine(`✅ Received AI response (${response.length} characters)`);
 
-			// Parse and return results
 			const results = this.parseResults(response);
 			this.outputChannel.appendLine(`🎯 Parsed ${results.length} relevant code sections`);
 
@@ -101,7 +93,6 @@ class CodeSearchProvider {
 
 	private parseResults(response: string): SearchResult[] {
 		try {
-			// Try to extract JSON from response
 			const jsonMatch = response.match(/\{[\s\S]*\}/);
 			if (!jsonMatch) {
 				throw new Error('No JSON found in response');
@@ -120,7 +111,6 @@ class CodeSearchProvider {
 				confidence: result.confidence || 0.8
 			}));
 		} catch (error) {
-			// Fallback: create basic results from response
 			this.outputChannel.appendLine(`Warning: Could not parse JSON response, using fallback`);
 			return [{
 				file: 'Response',
@@ -159,7 +149,6 @@ async function showWelcomeMessage(context: vscode.ExtensionContext) {
 export function activate(context: vscode.ExtensionContext) {
 	console.log('🚀 What-The-Code extension is now activating!');
 	
-	// Check if this is first time activation
 	const isFirstTime = !context.globalState.get('whatTheCode.hasShownWelcome', false);
 	if (isFirstTime) {
 		console.log('First time activation - showing welcome');
@@ -169,18 +158,15 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Creating search provider...');
 	const searchProvider = new CodeSearchProvider();
 
-	// Register search command
 	const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
 		console.log('🔍 Search command triggered!');
 		
 		try {
-			// Check Ollama configuration
 			const config = vscode.workspace.getConfiguration('whatTheCode');
 			const endpoint = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
 			const model = config.get<string>('ollamaModel', 'codellama:7b-instruct');
 			console.log(`Ollama config: ${endpoint}, model: ${model}`);
 			
-			// Quick health check - but don't block the UI
 			console.log('Checking Ollama availability...');
 
 			console.log('Opening search dialog...');
@@ -196,7 +182,6 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			// Show progress
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				title: 'Searching your code...',
@@ -210,7 +195,6 @@ export function activate(context: vscode.ExtensionContext) {
 				
 				progress.report({ increment: 100, message: 'Complete!' });
 
-				// Display results
 				if (results.length > 0) {
 					console.log('Displaying results...');
 					await displayResults(query, results);
@@ -225,18 +209,15 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	// Register test command
 	const testCommand = vscode.commands.registerCommand('what-the-code.testExtension', () => {
 		console.log('🧪 Test command executed!');
 		vscode.window.showInformationMessage('✅ What-The-Code extension is working! Press Ctrl+Shift+Alt+K to search.');
 	});
 
-	// Register frontend preset command
 	const presetCommand = vscode.commands.registerCommand('what-the-code.applyFrontendPreset', async () => {
 		vscode.window.showWarningMessage("This command is deprecated and will be removed.");
 	});
 
-	// Register test Ollama command
 	const testOllamaCommand = vscode.commands.registerCommand('what-the-code.testOllama', async () => {
 		const config = vscode.workspace.getConfiguration('whatTheCode');
 		const endpoint = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
@@ -269,12 +250,10 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	// Register settings command
 	const settingsCommand = vscode.commands.registerCommand('what-the-code.openSettings', () => {
 		vscode.commands.executeCommand('workbench.action.openSettings', 'whatTheCode');
 	});
 
-	// Register status bar item
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	statusBarItem.text = '$(search) Ask Code';
 	statusBarItem.command = 'what-the-code.searchCode';

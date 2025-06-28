@@ -13,7 +13,6 @@ export class OllamaProvider implements AIProvider {
 
 	async query(prompt: string): Promise<string> {
 		try {
-			// For CodeLlama, we need to format the prompt properly
 			const formattedPrompt = this.model.includes('codellama') ? 
 				this.formatCodeLlamaPrompt(prompt) : prompt;
 
@@ -24,7 +23,7 @@ export class OllamaProvider implements AIProvider {
 					prompt: formattedPrompt,
 					stream: false,
 					options: {
-						temperature: 0.1, // Lower for more focused responses
+						temperature: 0.1, 
 						top_p: 0.9,
 						top_k: 20,
 						num_predict: 1024,
@@ -35,7 +34,7 @@ export class OllamaProvider implements AIProvider {
 					headers: {
 						'Content-Type': 'application/json'
 					},
-					timeout: 90000 // CodeLlama can be slower
+					timeout: 90000 
 				}
 			);
 
@@ -51,9 +50,8 @@ export class OllamaProvider implements AIProvider {
 	}
 
 	private formatCodeLlamaPrompt(prompt: string): string {
-		// CodeLlama expects <INST> format for better instruction following
 		if (prompt.includes('<INST>')) {
-			return prompt; // Already formatted
+			return prompt; 
 		}
 		return `<INST>${prompt}</INST>`;
 	}
@@ -108,7 +106,7 @@ ${file.content}
 				context += fileSection;
 				totalChars += fileSection.length;
 			} else {
-				// Try to fit a truncated version
+				
 				const remainingChars = maxChars - totalChars - 200; // Leave some buffer
 				if (remainingChars > 500) {
 					const truncatedContent = file.content.substring(0, remainingChars) + '\n... (truncated)';

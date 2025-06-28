@@ -10,7 +10,6 @@ export class ResultsDisplay {
 			return;
 		}
 
-		// Try webview first, fallback to markdown document
 		try {
 			await this.showWebviewResults(query, results);
 		} catch (error) {
@@ -19,7 +18,6 @@ export class ResultsDisplay {
 	}
 
 	private static async showWebviewResults(query: string, results: SearchResult[]) {
-		// Create or reveal webview panel
 		if (this.webviewPanel) {
 			this.webviewPanel.reveal(vscode.ViewColumn.Beside);
 		} else {
@@ -38,7 +36,6 @@ export class ResultsDisplay {
 			});
 		}
 
-		// Set webview content
 		this.webviewPanel.webview.html = this.generateWebviewContent(query, results);
 	}
 
@@ -472,8 +469,8 @@ export class ResultsDisplay {
 	}
 
 	private static getConfidenceBadgeClass(confidence: number): string {
-		if (confidence >= 0.8) return 'confidence-high';
-		if (confidence >= 0.6) return 'confidence-medium';
+		if (confidence >= 0.8) { return 'confidence-high'; }
+		if (confidence >= 0.6) { return 'confidence-medium'; }
 		return 'confidence-low';
 	}
 
@@ -507,7 +504,6 @@ export class ResultsDisplay {
 			content += `**Explanation:** ${result.explanation}\n\n`;
 			content += `**Code:**\n\`\`\`javascript\n${result.content}\n\`\`\`\n\n`;
 			
-			// Add clickable links
 			const fileUri = vscode.Uri.file(result.file);
 			content += `[📂 Open File](command:vscode.open?${encodeURIComponent(JSON.stringify([fileUri]))}) | `;
 			content += `[🔗 Go to Line](command:workbench.action.gotoLine)\n\n`;
