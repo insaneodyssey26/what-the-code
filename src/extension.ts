@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CodeCollector } from './codeCollector';
-import { OllamaProvider, PromptBuilder } from './aiProviders';
+import { OllamaProvider, GeminiProvider, PromptBuilder } from './aiProviders';
 import { SearchResult, AIProvider } from './types';
 
 async function displayResults(query: string, results: SearchResult[]) {
@@ -46,34 +46,43 @@ class CodeSearchProvider {
 		this.codeCollector = new CodeCollector();
 	}
 
-	async searchCode(query: string): Promise<SearchResult[]> {
+	async searchCode(query: string, progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<SearchResult[]> {
 		try {
 			this.outputChannel.appendLine(`🔍 Searching for: "${query}"`);
 			this.outputChannel.show(true);
 
+			progress.report({ increment: 10, message: 'Collecting code files...' });
 			const allFiles = await this.codeCollector.collectCodeFiles();
 			this.outputChannel.appendLine(`📁 Found ${allFiles.length} code files`);
+			if (token.isCancellationRequested) { return []; }
 
 			if (allFiles.length === 0) {
 				vscode.window.showWarningMessage('No code files found in the workspace.');
 				return [];
 			}
 
+			progress.report({ increment: 20, message: 'Prioritizing files...' });
 			const relevantFiles = this.codeCollector.prioritizeFiles(allFiles, query);
 			this.outputChannel.appendLine(`🎯 Selected ${relevantFiles.length} most relevant files`);
+			if (token.isCancellationRequested) { return []; }
 
+			progress.report({ increment: 20, message: 'Building prompt...' });
 			const context = PromptBuilder.buildContextSection(relevantFiles);
 			
 			const prompt = PromptBuilder.buildCodeSearchPrompt(query, context);
 				
 			this.outputChannel.appendLine(`📝 Prepared prompt (${prompt.length} characters)`);
+			if (token.isCancellationRequested) { return []; }
 
+			progress.report({ increment: 30, message: 'Querying AI...' });
 			const aiProvider = this.getAIProvider();
 			this.outputChannel.appendLine(`🤖 Using ${aiProvider.name} provider`);
 
 			const response = await aiProvider.query(prompt);
 			this.outputChannel.appendLine(`✅ Received AI response (${response.length} characters)`);
+			if (token.isCancellationRequested) { return []; }
 
+			progress.report({ increment: 10, message: 'Parsing results...' });
 			const results = this.parseResults(response);
 			this.outputChannel.appendLine(`🎯 Parsed ${results.length} relevant code sections`);
 
@@ -86,39 +95,76 @@ class CodeSearchProvider {
 	}
 
 	private getAIProvider(): AIProvider {
-		const endpoint = this.config.get<string>('ollamaEndpoint', 'http://localhost:11434');
-		const model = this.config.get<string>('ollamaModel', 'codellama:7b-instruct');
-		return new OllamaProvider(endpoint, model);
+		const aiProvider = this.config.get<string>('aiProvider', 'gemini');
+		
+		if (aiProvider === 'gemini') {
+			let apiKey = this.config.get<string>('geminiApiKey', '');
+			const model = this.config.get<string>('geminiModel', 'gemini-1.5-flash');
+			
+			// Temporary: Use hardcoded API key for testing
+			if (!apiKey) {
+				apiKey = 'AIzaSyBns_LbYTvuRBR3RQ-T9pXfJBTK0LdjOfI';
+				console.log('Using hardcoded API key for testing');
+			}
+			
+			return new GeminiProvider(apiKey, model);
+		} else {
+			// Fallback to Ollama
+			const endpoint = this.config.get<string>('ollamaEndpoint', 'http://localhost:11434');
+			const model = this.config.get<string>('ollamaModel', 'codellama:7b-instruct');
+			return new OllamaProvider(endpoint, model);
+		}
 	}
 
 	private parseResults(response: string): SearchResult[] {
 		try {
-			const jsonMatch = response.match(/\{[\s\S]*\}/);
+			this.outputChannel.appendLine(`Raw AI response: ${response.substring(0, 200)}...`);
+			
+			// Try to extract JSON from the response
+			let jsonMatch = response.match(/\{[\s\S]*\}/);
+			
+			// If no JSON found, try looking for JSON within code blocks
+			if (!jsonMatch) {
+				const codeBlockMatch = response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+				if (codeBlockMatch) {
+					jsonMatch = [codeBlockMatch[1]];
+				}
+			}
+			
 			if (!jsonMatch) {
 				throw new Error('No JSON found in response');
 			}
 
 			const parsed = JSON.parse(jsonMatch[0]);
 			if (!parsed.results || !Array.isArray(parsed.results)) {
-				throw new Error('Invalid response format');
+				throw new Error('Invalid response format - missing results array');
 			}
 
-			return parsed.results.map((result: any) => ({
-				file: result.file || '',
-				line: result.line || 1,
-				content: result.content || '',
-				explanation: result.explanation || '',
-				confidence: result.confidence || 0.8
-			}));
+			const validResults = parsed.results
+				.filter((result: any) => result.file && result.content)
+				.map((result: any) => ({
+					file: result.file,
+					line: Math.max(1, result.line || 1),
+					content: result.content,
+					explanation: result.explanation || 'No explanation provided',
+					confidence: Math.min(1, Math.max(0, result.confidence || 0.8))
+				}));
+
+			if (validResults.length === 0) {
+				throw new Error('No valid results found in response');
+			}
+
+			return validResults;
 		} catch (error) {
-			this.outputChannel.appendLine(`Warning: Could not parse JSON response, using fallback`);
-			return [{
-				file: 'Response',
-				line: 1,
-				content: response.substring(0, 500) + (response.length > 500 ? '...' : ''),
-				explanation: 'Raw AI response (parsing failed)',
-				confidence: 0.5
-			}];
+			this.outputChannel.appendLine(`JSON parsing failed: ${error}`);
+			this.outputChannel.appendLine(`Full response: ${response}`);
+			
+			// Instead of returning invalid file paths, show the error to user
+			vscode.window.showErrorMessage(
+				`AI response parsing failed. The AI may not have returned properly formatted JSON. Check the output channel for details.`
+			);
+			
+			return []; // Return empty array instead of invalid results
 		}
 	}
 
@@ -185,15 +231,23 @@ export function activate(context: vscode.ExtensionContext) {
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				title: 'Searching your code...',
-				cancellable: false
-			}, async (progress) => {
+				cancellable: true
+			}, async (progress, token) => {
+				token.onCancellationRequested(() => {
+					console.log("User canceled the search operation.");
+				});
+
 				console.log('Starting search with progress...');
 				progress.report({ increment: 10, message: 'Collecting code files...' });
 				
-				const results = await searchProvider.searchCode(query.trim());
+				const results = await searchProvider.searchCode(query.trim(), progress, token);
 				console.log(`Search completed with ${results.length} results`);
 				
 				progress.report({ increment: 100, message: 'Complete!' });
+
+				if (token.isCancellationRequested) {
+					return;
+				}
 
 				if (results.length > 0) {
 					console.log('Displaying results...');
@@ -250,6 +304,44 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
+	const testGeminiCommand = vscode.commands.registerCommand('what-the-code.testGemini', async () => {
+		const config = vscode.workspace.getConfiguration('whatTheCode');
+		let apiKey = config.get<string>('geminiApiKey', '');
+		const model = config.get<string>('geminiModel', 'gemini-1.5-flash');
+		
+		// Temporary: Use hardcoded API key for testing
+		if (!apiKey) {
+			apiKey = 'AIzaSyBns_LbYTvuRBR3RQ-T9pXfJBTK0LdjOfI';
+			console.log('Using hardcoded API key for testing');
+		}
+		
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: 'Testing Gemini connection...',
+			cancellable: false
+		}, async (progress) => {
+			try {
+				progress.report({ increment: 30, message: 'Connecting to Gemini API...' });
+				
+				const testProvider = new GeminiProvider(apiKey, model);
+				const testPrompt = 'Say "Hello from Gemini!" and nothing else.';
+				
+				progress.report({ increment: 60, message: 'Testing API response...' });
+				const response = await testProvider.query(testPrompt);
+				
+				progress.report({ increment: 100, message: 'Success!' });
+				
+				vscode.window.showInformationMessage(
+					`✅ Gemini connection successful!\n\nModel: ${model}\nResponse: ${response.substring(0, 100)}...`
+				);
+			} catch (error: any) {
+				vscode.window.showErrorMessage(
+					`❌ Gemini connection failed: ${error.message}\n\nMake sure:\n1. API key is valid\n2. You have internet connection\n3. Gemini API is enabled`
+				);
+			}
+		});
+	});
+
 	const settingsCommand = vscode.commands.registerCommand('what-the-code.openSettings', () => {
 		vscode.commands.executeCommand('workbench.action.openSettings', 'whatTheCode');
 	});
@@ -261,7 +353,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testOllamaCommand, settingsCommand, searchProvider, statusBarItem);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testOllamaCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }

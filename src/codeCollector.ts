@@ -19,7 +19,7 @@ export class CodeCollector {
 		const includedExtensions = options?.includedExtensions || 
 			this.config.get<string[]>('includedExtensions', []);
 		const maxFileSize = options?.maxFileSize || 
-			this.config.get<number>('maxFileSize', 50000);
+			this.config.get<number>('maxFileSize', 10000); // Reduced from 50000 to 10000
 		const excludePatterns = options?.excludePatterns || [
 			'**/node_modules/**',
 			'**/dist/**',
@@ -99,7 +99,7 @@ export class CodeCollector {
 				relevanceScore: this.calculateRelevanceScore(file, queryTerms)
 			}))
 			.sort((a, b) => b.relevanceScore - a.relevanceScore)
-			.slice(0, 20); // Limit to top 20 most relevant files
+			.slice(0, 5); // Limit to top 5 most relevant files for faster processing
 	}
 
 	private calculateRelevanceScore(file: CodeFile, queryTerms: string[]): number {
