@@ -32,10 +32,37 @@
       },
       {
         "command": "what-the-code.openSettings",
-        "title": "Configure Ollama Settings", 
+        "title": "Configure Ollama Settings",
         "category": "What-The-Code"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "what-the-code",
+          "title": "What-The-Code",
+          "icon": "media/search.svg"
+        }
+      ]
+    },
+    "views": {
+      "what-the-code": [
+        {
+          "id": "what-the-code-commands",
+          "name": "Commands"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "what-the-code.searchCode",
+          "when": "view == what-the-code-commands",
+          "group": "navigation",
+          "icon": "$(search)"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "what-the-code.searchCode",
