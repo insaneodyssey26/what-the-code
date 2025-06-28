@@ -8,12 +8,12 @@ export class SearchResultItem extends vscode.TreeItem {
 		public readonly isGroup: boolean = false
 	) {
 		super(
-			isGroup ? `${vscode.workspace.asRelativePath(result.file)}` : result.explanation,
+			isGroup ? `${vscode.workspace.asRelativePath(result.file)}` : `📍 Line ${result.line}: ${result.explanation}`,
 			collapsibleState
 		);
 
 		if (!isGroup) {
-			this.tooltip = `${result.explanation}\n\nClick to open file at line ${result.line}`;
+			this.tooltip = `${result.explanation}\n\nFile: ${vscode.workspace.asRelativePath(result.file)}\nLine: ${result.line}\nContent: ${result.content.substring(0, 100)}...\n\nClick to open file at line ${result.line}`;
 			this.description = `Line ${result.line}`;
 			this.command = {
 				command: 'what-the-code.openResult',
@@ -78,12 +78,16 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 			// Create tree items for each file group
 			const fileItems: SearchResultItem[] = [];
 			fileGroups.forEach((results, filePath) => {
+				// Get line numbers for this file
+				const lines = results.map(r => r.line).sort((a, b) => a - b);
+				const lineRange = lines.length > 1 ? `Lines ${lines[0]}-${lines[lines.length - 1]}` : `Line ${lines[0]}`;
+				
 				// Create a representative result for the file group
 				const fileResult: SearchResult = {
 					file: filePath,
 					line: results[0].line,
 					content: `${results.length} result(s) found`,
-					explanation: `${results.length} matches in this file`,
+					explanation: `${results.length} matches found (${lineRange})`,
 					confidence: results[0].confidence
 				};
 
@@ -106,7 +110,7 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 				new SearchResultItem(
 					{
 						...result,
-						explanation: `${index + 1}. ${result.explanation}`
+						explanation: `${result.explanation}`
 					},
 					vscode.TreeItemCollapsibleState.None,
 					false

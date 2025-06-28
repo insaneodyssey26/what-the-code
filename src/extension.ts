@@ -10,17 +10,17 @@ async function displayResults(query: string, results: SearchResult[], resultsPro
 	resultsProvider.updateResults(query, results);
 	
 	// Also show the QuickPick for immediate selection
-	const items = results.map(result => ({
-		label: `$(file-code) ${vscode.workspace.asRelativePath(result.file)}:${result.line}`,
-		description: result.explanation,
-		detail: result.content.trim(),
+	const items = results.map((result, index) => ({
+		label: `$(file-code) ${vscode.workspace.asRelativePath(result.file)} [Line ${result.line}]`,
+		description: `${index + 1}. ${result.explanation}`,
+		detail: `📍 Line ${result.line} | ${result.content.trim()}`,
 		result: result
 	}));
 
 	const selected = await vscode.window.showQuickPick(items, {
 		matchOnDescription: true,
 		matchOnDetail: true,
-		placeHolder: `Results for "${query}" (also shown in sidebar)`
+		placeHolder: `${results.length} results for "${query}" (also shown in sidebar)`
 	});
 
 	if (selected) {
