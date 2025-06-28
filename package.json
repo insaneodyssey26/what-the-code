@@ -34,6 +34,16 @@
         "command": "what-the-code.openSettings",
         "title": "Configure Settings",
         "category": "What-The-Code"
+      },
+      {
+        "command": "what-the-code.openResult",
+        "title": "Open Search Result",
+        "category": "What-The-Code"
+      },
+      {
+        "command": "what-the-code.clearResults",
+        "title": "Clear Search Results",
+        "category": "What-The-Code"
       }
     ],
     "viewsContainers": {
@@ -49,7 +59,13 @@
       "what-the-code": [
         {
           "id": "what-the-code-commands",
-          "name": "Commands"
+          "name": "Commands",
+          "when": "true"
+        },
+        {
+          "id": "what-the-code-results",
+          "name": "Search Results",
+          "when": "true"
         }
       ]
     },
@@ -60,6 +76,12 @@
           "when": "view == what-the-code-commands",
           "group": "navigation",
           "icon": "$(search)"
+        },
+        {
+          "command": "what-the-code.clearResults",
+          "when": "view == what-the-code-results",
+          "group": "navigation",
+          "icon": "$(clear-all)"
         }
       ]
     },

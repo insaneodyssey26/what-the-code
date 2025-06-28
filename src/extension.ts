@@ -2,8 +2,13 @@ import * as vscode from 'vscode';
 import { CodeCollector } from './codeCollector';
 import { GeminiProvider, PromptBuilder } from './aiProviders';
 import { SearchResult, AIProvider } from './types';
+import { SearchResultsProvider } from './searchResultsProvider';
 
-async function displayResults(query: string, results: SearchResult[]) {
+async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
+	// Update the tree view with results
+	resultsProvider.updateResults(query, results);
+	
+	// Also show the QuickPick for immediate selection
 	const items = results.map(result => ({
 		label: `$(file-code) ${vscode.workspace.asRelativePath(result.file)}:${result.line}`,
 		description: result.explanation,
@@ -14,12 +19,40 @@ async function displayResults(query: string, results: SearchResult[]) {
 	const selected = await vscode.window.showQuickPick(items, {
 		matchOnDescription: true,
 		matchOnDetail: true,
-		placeHolder: `Results for "${query}"`
+		placeHolder: `Results for "${query}" (also shown in sidebar)`
 	});
 
 	if (selected) {
-		const { file, line } = selected.result;
-		const document = await vscode.workspace.openTextDocument(file);
+		await openSearchResult(selected.result);
+	}
+}
+
+async function openSearchResult(result: SearchResult) {
+	try {
+		const { file, line } = result;
+		
+		// Convert to URI if it's not already
+		let fileUri: vscode.Uri;
+		if (typeof file === 'string') {
+			// Check if it's already an absolute path
+			if (file.includes(':') || file.startsWith('/')) {
+				fileUri = vscode.Uri.file(file);
+			} else {
+				// It's a relative path, resolve it from workspace
+				const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+				if (workspaceFolder) {
+					fileUri = vscode.Uri.joinPath(workspaceFolder.uri, file);
+				} else {
+					throw new Error('No workspace folder found');
+				}
+			}
+		} else {
+			fileUri = file as vscode.Uri;
+		}
+		
+		console.log(`Opening file: ${fileUri.fsPath} at line ${line}`);
+		
+		const document = await vscode.workspace.openTextDocument(fileUri);
 		const editor = await vscode.window.showTextDocument(document);
 		
 		const range = new vscode.Range(line - 1, 0, line - 1, 0);
@@ -32,6 +65,9 @@ async function displayResults(query: string, results: SearchResult[]) {
 		editor.setDecorations(decorationType, [range]);
 		
 		setTimeout(() => decorationType.dispose(), 3000);
+	} catch (error: any) {
+		console.error('Error opening file:', error);
+		vscode.window.showErrorMessage(`Failed to open file: ${error.message}`);
 	}
 }
 
@@ -133,13 +169,24 @@ class CodeSearchProvider {
 
 			const validResults = parsed.results
 				.filter((result: any) => result.file && result.content)
-				.map((result: any) => ({
-					file: result.file,
-					line: Math.max(1, result.line || 1),
-					content: result.content,
-					explanation: result.explanation || 'No explanation provided',
-					confidence: Math.min(1, Math.max(0, result.confidence || 0.8))
-				}));
+				.map((result: any) => {
+					// Convert relative path to absolute path
+					const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+					let absolutePath = result.file;
+					
+					if (workspaceFolder && !result.file.includes(':')) {
+						// If it's a relative path, make it absolute
+						absolutePath = vscode.Uri.joinPath(workspaceFolder.uri, result.file).fsPath;
+					}
+					
+					return {
+						file: absolutePath,
+						line: Math.max(1, result.line || 1),
+						content: result.content,
+						explanation: result.explanation || 'No explanation provided',
+						confidence: Math.min(1, Math.max(0, result.confidence || 0.8))
+					};
+				});
 
 			if (validResults.length === 0) {
 				throw new Error('No valid results found in response');
@@ -194,6 +241,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	console.log('Creating search provider...');
 	const searchProvider = new CodeSearchProvider();
+	
+	// Create and register the search results tree view provider
+	const resultsProvider = new SearchResultsProvider();
+	vscode.window.createTreeView('what-the-code-results', {
+		treeDataProvider: resultsProvider,
+		showCollapseAll: true
+	});
 
 	const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
 		console.log('🔍 Search command triggered!');
@@ -235,9 +289,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if (results.length > 0) {
 					console.log('Displaying results...');
-					await displayResults(query, results);
+					await displayResults(query, results, resultsProvider);
 				} else {
 					console.log('No results found');
+					resultsProvider.clearResults();
 					vscode.window.showInformationMessage('No relevant code found for your query. Try rephrasing or being more specific.');
 				}
 			});
@@ -294,6 +349,17 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
+	const openResultCommand = vscode.commands.registerCommand('what-the-code.openResult', async (result: SearchResult) => {
+		if (result) {
+			await openSearchResult(result);
+		}
+	});
+
+	const clearResultsCommand = vscode.commands.registerCommand('what-the-code.clearResults', () => {
+		resultsProvider.clearResults();
+		vscode.window.showInformationMessage('Search results cleared.');
+	});
+
 	const settingsCommand = vscode.commands.registerCommand('what-the-code.openSettings', () => {
 		vscode.commands.executeCommand('workbench.action.openSettings', 'whatTheCode');
 	});
@@ -305,7 +371,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }
