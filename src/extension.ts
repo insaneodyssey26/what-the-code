@@ -1,10 +1,41 @@
 import * as vscode from 'vscode';
 import { CodeCollector } from './codeCollector';
 import { OllamaProvider, PromptBuilder } from './aiProviders';
-import { ResultsDisplay } from './resultsDisplay';
-import { SearchInput } from './searchInput';
-import { UIPresets } from './uiPresets';
 import { SearchResult, AIProvider } from './types';
+
+async function displayResults(query: string, results: SearchResult[]) {
+	const items = results.map(result => ({
+		label: `$(file-code) ${vscode.workspace.asRelativePath(result.file)}:${result.line}`,
+		description: result.explanation,
+		detail: result.content.trim(),
+		result: result
+	}));
+
+	const selected = await vscode.window.showQuickPick(items, {
+		matchOnDescription: true,
+		matchOnDetail: true,
+		placeHolder: `Results for "${query}"`
+	});
+
+	if (selected) {
+		const { file, line } = selected.result;
+		const document = await vscode.workspace.openTextDocument(file);
+		const editor = await vscode.window.showTextDocument(document);
+		
+		const range = new vscode.Range(line - 1, 0, line - 1, 0);
+		editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+		
+		// Highlight the line
+		const decorationType = vscode.window.createTextEditorDecorationType({
+			backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
+			isWholeLine: true
+		});
+		editor.setDecorations(decorationType, [range]);
+		
+		// Remove decoration after a delay
+		setTimeout(() => decorationType.dispose(), 3000);
+	}
+}
 
 class CodeSearchProvider {
 	private config: vscode.WorkspaceConfiguration;
@@ -109,17 +140,16 @@ class CodeSearchProvider {
 async function showWelcomeMessage(context: vscode.ExtensionContext) {
 	const result = await vscode.window.showInformationMessage(
 		'🎉 Welcome to What-The-Code! Ready to search your code with AI?',
-		'🚀 Quick Setup',
-		'✨ Try It Now'
+		'✨ Try It Now',
+		'⚙️ Configure Settings'
 	);
 
 	switch (result) {
-		case '🚀 Quick Setup':
-			await UIPresets.applyFrontendPreset();
-			vscode.window.showInformationMessage('⚡ Run "Test Ollama Connection" to verify your setup! Then press Ctrl+Shift+Alt+K to search.');
-			break;
 		case '✨ Try It Now':
 			vscode.commands.executeCommand('what-the-code.searchCode');
+			break;
+		case '⚙️ Configure Settings':
+			vscode.commands.executeCommand('what-the-code.openSettings');
 			break;
 	}
 
@@ -154,7 +184,11 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log('Checking Ollama availability...');
 
 			console.log('Opening search dialog...');
-			const query = await SearchInput.showSearchDialog();
+			const query = await vscode.window.showInputBox({
+				placeHolder: 'e.g., "Where is user authentication handled?"',
+				prompt: 'Ask a question about your code',
+				title: 'What-The-Code: Ask Your Code'
+			});
 			console.log(`User query: ${query}`);
 
 			if (!query || query.trim().length === 0) {
@@ -179,7 +213,7 @@ export function activate(context: vscode.ExtensionContext) {
 				// Display results
 				if (results.length > 0) {
 					console.log('Displaying results...');
-					await ResultsDisplay.displayResults(query, results);
+					await displayResults(query, results);
 				} else {
 					console.log('No results found');
 					vscode.window.showInformationMessage('No relevant code found for your query. Try rephrasing or being more specific.');
@@ -199,7 +233,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Register frontend preset command
 	const presetCommand = vscode.commands.registerCommand('what-the-code.applyFrontendPreset', async () => {
-		await UIPresets.applyFrontendPreset();
+		vscode.window.showWarningMessage("This command is deprecated and will be removed.");
 	});
 
 	// Register test Ollama command

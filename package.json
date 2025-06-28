@@ -31,11 +31,6 @@
         "category": "What-The-Code"
       },
       {
-        "command": "what-the-code.applyFrontendPreset",
-        "title": "Apply Frontend/UI Preset",
-        "category": "What-The-Code"
-      },
-      {
         "command": "what-the-code.openSettings",
         "title": "Configure Ollama Settings", 
         "category": "What-The-Code"
@@ -98,3 +93,4 @@
     "axios": "^1.6.0"
   }
 }
+
