@@ -110,7 +110,6 @@ async function showWelcomeMessage(context: vscode.ExtensionContext) {
 	const result = await vscode.window.showInformationMessage(
 		'🎉 Welcome to What-The-Code! Ready to search your code with AI?',
 		'🚀 Quick Setup',
-		'📖 View Guide',
 		'✨ Try It Now'
 	);
 
@@ -118,10 +117,6 @@ async function showWelcomeMessage(context: vscode.ExtensionContext) {
 		case '🚀 Quick Setup':
 			await UIPresets.applyFrontendPreset();
 			vscode.window.showInformationMessage('⚡ Run "Test Ollama Connection" to verify your setup! Then press Ctrl+Shift+Alt+K to search.');
-			break;
-		case '📖 View Guide':
-			const guideUri = vscode.Uri.file(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath + '/SETUP-GUIDE.md');
-			vscode.commands.executeCommand('markdown.showPreview', guideUri);
 			break;
 		case '✨ Try It Now':
 			vscode.commands.executeCommand('what-the-code.searchCode');
