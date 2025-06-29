@@ -5,6 +5,8 @@ import { SearchResult, AIProvider } from './types';
 import { SearchResultsProvider } from './searchResultsProvider';
 import { SnapshotProvider } from './snapshotProvider';
 import { DeadCodeFinder } from './deadCodeFinder';
+import { MainActionsProvider } from './mainActionsProvider';
+import { DeadCodeActionsProvider } from './deadCodeActionsProvider';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	// Update the tree view with results
@@ -258,6 +260,23 @@ export function activate(context: vscode.ExtensionContext) {
 		showCollapseAll: true
 	});
 
+	// Create and register the main actions tree view provider
+	const mainActionsProvider = new MainActionsProvider();
+	vscode.window.createTreeView('what-the-code-main-actions', {
+		treeDataProvider: mainActionsProvider,
+		showCollapseAll: false
+	});
+
+	// Create and register the dead code actions tree view provider
+	const deadCodeActionsProvider = new DeadCodeActionsProvider();
+	vscode.window.createTreeView('what-the-code-dead-code', {
+		treeDataProvider: deadCodeActionsProvider,
+		showCollapseAll: false
+	});
+
+	// Create dead code finder
+	const deadCodeFinder = new DeadCodeFinder();
+
 	const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
 		console.log('🔍 Search command triggered!');
 		
@@ -395,9 +414,10 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	// Register dead code finder command
-	const deadCodeFinder = new DeadCodeFinder();
 	const findDeadCodeCommand = vscode.commands.registerCommand('what-the-code.findDeadCode', async () => {
 		await deadCodeFinder.findDeadCode();
+		// Update the UI with analysis results (this could be enhanced to pass actual results)
+		deadCodeActionsProvider.updateAnalysisResults(0); // For now, just refresh the UI
 	});
 
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -407,7 +427,28 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, restoreSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider, findDeadCodeCommand, deadCodeFinder);
+	context.subscriptions.push(
+		searchCommand, 
+		testCommand, 
+		presetCommand, 
+		testGeminiCommand, 
+		settingsCommand, 
+		searchProvider, 
+		statusBarItem, 
+		openResultCommand, 
+		clearResultsCommand, 
+		resultsProvider, 
+		saveSnapshotCommand, 
+		openSnapshotCommand, 
+		restoreSnapshotCommand, 
+		deleteSnapshotCommand, 
+		clearAllSnapshotsCommand, 
+		snapshotProvider, 
+		findDeadCodeCommand, 
+		deadCodeFinder,
+		mainActionsProvider,
+		deadCodeActionsProvider
+	);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }

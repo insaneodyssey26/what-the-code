@@ -17,7 +17,7 @@
     "commands": [
       {
         "command": "what-the-code.searchCode",
-        "title": "Ask Your Code",
+        "title": "🔍 Ask Your Code",
         "category": "What-The-Code",
         "icon": "$(search)"
       },
@@ -29,13 +29,13 @@
       },
       {
         "command": "what-the-code.testGemini",
-        "title": "Test Gemini Connection",
+        "title": "🔌 Test Gemini Connection",
         "category": "What-The-Code",
         "icon": "$(plug)"
       },
       {
         "command": "what-the-code.openSettings",
-        "title": "Configure Settings",
+        "title": "⚙️ Configure Settings",
         "category": "What-The-Code",
         "icon": "$(settings-gear)"
       },
@@ -100,22 +100,28 @@
     "views": {
       "what-the-code": [
         {
-          "id": "what-the-code-commands",
-          "name": "Commands",
+          "id": "what-the-code-main-actions",
+          "name": "🚀 Main Actions",
           "when": "true",
-          "icon": "$(symbol-misc)"
+          "icon": "$(rocket)"
         },
         {
           "id": "what-the-code-results",
-          "name": "Search Results",
+          "name": "🔍 Search Results",
           "when": "true",
           "icon": "$(search-view-icon)"
         },
         {
           "id": "what-the-code-snapshots",
-          "name": "Code Snapshots",
+          "name": "📸 Code Snapshots",
           "when": "true",
           "icon": "$(save-all)"
+        },
+        {
+          "id": "what-the-code-dead-code",
+          "name": "🧹 Dead Code Analysis",
+          "when": "true",
+          "icon": "$(search-remove)"
         }
       ]
     },
@@ -123,21 +129,27 @@
       "view/title": [
         {
           "command": "what-the-code.searchCode",
-          "when": "view == what-the-code-commands",
-          "group": "navigation",
+          "when": "view == what-the-code-main-actions",
+          "group": "navigation@1",
           "icon": "$(search)"
         },
         {
           "command": "what-the-code.saveSnapshot",
-          "when": "view == what-the-code-commands",
-          "group": "navigation",
+          "when": "view == what-the-code-main-actions",
+          "group": "navigation@2",
           "icon": "$(save)"
         },
         {
-          "command": "what-the-code.findDeadCode",
-          "when": "view == what-the-code-commands",
-          "group": "navigation",
-          "icon": "$(search-remove)"
+          "command": "what-the-code.testGemini",
+          "when": "view == what-the-code-main-actions",
+          "group": "navigation@3",
+          "icon": "$(plug)"
+        },
+        {
+          "command": "what-the-code.openSettings",
+          "when": "view == what-the-code-main-actions",
+          "group": "navigation@4",
+          "icon": "$(settings-gear)"
         },
         {
           "command": "what-the-code.clearResults",
@@ -148,14 +160,20 @@
         {
           "command": "what-the-code.saveSnapshot",
           "when": "view == what-the-code-snapshots",
-          "group": "navigation",
+          "group": "navigation@1",
           "icon": "$(save)"
         },
         {
           "command": "what-the-code.clearAllSnapshots",
           "when": "view == what-the-code-snapshots",
-          "group": "navigation",
+          "group": "navigation@2",
           "icon": "$(clear-all)"
+        },
+        {
+          "command": "what-the-code.findDeadCode",
+          "when": "view == what-the-code-dead-code",
+          "group": "navigation@1",
+          "icon": "$(search-remove)"
         }
       ],
       "view/item/context": [
