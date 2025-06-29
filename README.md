@@ -1,14 +1,29 @@
 # What-The-Code 🔍
 
-An AI-powered VSCode extension that lets you search your codebase using natural language queries powered by local Ollama models (CodeLlama). Perfect for frontend developers who want fast, private code search without cloud dependencies.
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=saheli56.what-the-code)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+**What-The-Code** is a powerful VS Code extension that brings AI-powered code analysis to your fingertips. Search your codebase with natural language, find dead code, and manage file snapshots - all in one place!
 
-- **Natural Language Search**: Ask questions like "Where do we handle user authentication?" or "Show me all React hooks using useEffect"
-- **Local AI Analysis**: Uses local Ollama models (CodeLlama) to understand your code - no cloud, no API keys required
-- **Smart File Prioritization**: Automatically focuses on the most relevant files for your query
-- **Beautiful Results Display**: Shows results in an interactive webview with syntax highlighting
-- **Frontend-Focused**: Optimized for modern web development workflows (React, Vue, TypeScript, etc.)
+## ✨ Features
+
+### 🔍 **AI-Powered Code Search**
+- Ask questions about your codebase in natural language
+- Examples: "Where is user authentication handled?", "Show me all React components", "Find error handling code"
+- Powered by Google Gemini AI for intelligent code understanding
+- Get precise results with explanations
+
+### 🧹 **Dead Code Analysis**
+- Find unused imports, functions, variables, and React components
+- Confidence levels to help you safely clean up code
+- Reduce bundle size and improve maintainability
+- Detailed reports with actionable recommendations
+
+### 📸 **Code Snapshots**
+- Save snapshots of your files before making changes
+- Restore to any saved checkpoint instantly
+- Perfect for experimenting with code
+- Built-in version control for individual files
 - **Privacy-First**: Everything runs locally on your machine
 
 ## Quick Start
