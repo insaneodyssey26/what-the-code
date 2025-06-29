@@ -20,6 +20,8 @@
 	"exclude": [
 		"test-snapshot.ts",
 		"test-snapshot.js",
+		"test-dead-code.ts",
+		"test-dead-code.js",
 		"node_modules",
 		"out"
 	]
