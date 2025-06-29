@@ -206,6 +206,70 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
         }
     }
 
+    async restoreSnapshot(snapshot: CodeSnapshot): Promise<void> {
+        try {
+            // Check if the original file still exists
+            const fileUri = vscode.Uri.file(snapshot.filePath);
+            
+            // Ask for confirmation before restoring
+            const choice = await vscode.window.showWarningMessage(
+                `Are you sure you want to restore "${snapshot.fileName}" to the snapshot from ${snapshot.timestamp.toLocaleString()}?\n\nThis will overwrite the current content and cannot be undone.`,
+                { modal: true },
+                'Yes, Restore',
+                'Cancel'
+            );
+
+            if (choice !== 'Yes, Restore') {
+                return;
+            }
+
+            // Try to open the original file first
+            let document: vscode.TextDocument;
+            try {
+                document = await vscode.workspace.openTextDocument(fileUri);
+            } catch (error) {
+                // If file doesn't exist, create a new one
+                document = await vscode.workspace.openTextDocument({
+                    content: '',
+                    language: snapshot.language
+                });
+                
+                // Show the new document first, then we'll save it to the original path
+                await vscode.window.showTextDocument(document);
+            }
+
+            // Show the document
+            const editor = await vscode.window.showTextDocument(document);
+
+            // Replace the entire content with the snapshot content
+            const edit = new vscode.WorkspaceEdit();
+            const fullRange = new vscode.Range(
+                document.positionAt(0),
+                document.positionAt(document.getText().length)
+            );
+            
+            edit.replace(fileUri, fullRange, snapshot.content);
+            
+            // Apply the edit
+            const success = await vscode.workspace.applyEdit(edit);
+            
+            if (success) {
+                // Save the document
+                await document.save();
+                
+                vscode.window.showInformationMessage(
+                    `✅ Successfully restored "${snapshot.fileName}" from snapshot (${snapshot.timestamp.toLocaleString()})`
+                );
+            } else {
+                vscode.window.showErrorMessage('Failed to apply content changes');
+            }
+
+        } catch (error) {
+            console.error('Error restoring snapshot:', error);
+            vscode.window.showErrorMessage(`Failed to restore snapshot: ${error}`);
+        }
+    }
+
     dispose(): void {
         this._onDidChangeTreeData.dispose();
     }

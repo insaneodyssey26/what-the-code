@@ -64,6 +64,12 @@
         "icon": "$(file-code)"
       },
       {
+        "command": "what-the-code.restoreSnapshot",
+        "title": "🔄 Restore Snapshot",
+        "category": "What-The-Code",
+        "icon": "$(debug-restart)"
+      },
+      {
         "command": "what-the-code.deleteSnapshot",
         "title": "Delete Snapshot",
         "category": "What-The-Code",
@@ -142,9 +148,15 @@
       ],
       "view/item/context": [
         {
+          "command": "what-the-code.restoreSnapshot",
+          "when": "view == what-the-code-snapshots && viewItem == snapshot",
+          "group": "inline@1",
+          "icon": "$(debug-restart)"
+        },
+        {
           "command": "what-the-code.deleteSnapshot",
           "when": "view == what-the-code-snapshots && viewItem == snapshot",
-          "group": "inline",
+          "group": "inline@2",
           "icon": "$(trash)"
         }
       ]

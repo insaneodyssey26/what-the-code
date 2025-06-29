@@ -381,6 +381,10 @@ export function activate(context: vscode.ExtensionContext) {
 		await snapshotProvider.openSnapshot(snapshot);
 	});
 
+	const restoreSnapshotCommand = vscode.commands.registerCommand('what-the-code.restoreSnapshot', async (snapshot) => {
+		await snapshotProvider.restoreSnapshot(snapshot);
+	});
+
 	const deleteSnapshotCommand = vscode.commands.registerCommand('what-the-code.deleteSnapshot', async (snapshot) => {
 		await snapshotProvider.deleteSnapshot(snapshot);
 	});
@@ -396,7 +400,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, restoreSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }
