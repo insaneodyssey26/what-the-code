@@ -28,7 +28,7 @@
         "icon": "$(beaker)"
       },
       {
-        "command": "what-the-code.testGemini", 
+        "command": "what-the-code.testGemini",
         "title": "Test Gemini Connection",
         "category": "What-The-Code",
         "icon": "$(plug)"
@@ -80,6 +80,12 @@
         "title": "Clear All Snapshots",
         "category": "What-The-Code",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "what-the-code.findDeadCode",
+        "title": "🧹 Find Dead Code",
+        "category": "What-The-Code",
+        "icon": "$(search-remove)"
       }
     ],
     "viewsContainers": {
@@ -126,6 +132,12 @@
           "when": "view == what-the-code-commands",
           "group": "navigation",
           "icon": "$(save)"
+        },
+        {
+          "command": "what-the-code.findDeadCode",
+          "when": "view == what-the-code-commands",
+          "group": "navigation",
+          "icon": "$(search-remove)"
         },
         {
           "command": "what-the-code.clearResults",
@@ -180,8 +192,16 @@
           "type": "string",
           "default": "gemini-1.5-flash",
           "description": "Gemini model to use for code analysis",
-          "enum": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
-          "enumDescriptions": ["Fast and efficient", "Most capable", "Legacy model"]
+          "enum": [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-pro"
+          ],
+          "enumDescriptions": [
+            "Fast and efficient",
+            "Most capable",
+            "Legacy model"
+          ]
         },
         "whatTheCode.maxFileSize": {
           "type": "number",
@@ -190,7 +210,24 @@
         },
         "whatTheCode.includedExtensions": {
           "type": "array",
-          "default": [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".cs", ".cpp", ".c", ".h", ".go", ".rs", ".php", ".rb", ".vue", ".svelte"],
+          "default": [
+            ".js",
+            ".ts",
+            ".jsx",
+            ".tsx",
+            ".py",
+            ".java",
+            ".cs",
+            ".cpp",
+            ".c",
+            ".h",
+            ".go",
+            ".rs",
+            ".php",
+            ".rb",
+            ".vue",
+            ".svelte"
+          ],
           "description": "File extensions to include in code search"
         }
       }
@@ -205,18 +242,18 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.101.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.101.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "ts-morph": "^26.0.0"
   }
 }
-

@@ -4,6 +4,7 @@ import { GeminiProvider, PromptBuilder } from './aiProviders';
 import { SearchResult, AIProvider } from './types';
 import { SearchResultsProvider } from './searchResultsProvider';
 import { SnapshotProvider } from './snapshotProvider';
+import { DeadCodeFinder } from './deadCodeFinder';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	// Update the tree view with results
@@ -393,6 +394,12 @@ export function activate(context: vscode.ExtensionContext) {
 		snapshotProvider.clearAllSnapshots();
 	});
 
+	// Register dead code finder command
+	const deadCodeFinder = new DeadCodeFinder();
+	const findDeadCodeCommand = vscode.commands.registerCommand('what-the-code.findDeadCode', async () => {
+		await deadCodeFinder.findDeadCode();
+	});
+
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	statusBarItem.text = '$(search) Ask Code';
 	statusBarItem.command = 'what-the-code.searchCode';
@@ -400,7 +407,7 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	console.log('Registering commands and UI elements...');
-	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, restoreSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider);
+	context.subscriptions.push(searchCommand, testCommand, presetCommand, testGeminiCommand, settingsCommand, searchProvider, statusBarItem, openResultCommand, clearResultsCommand, resultsProvider, saveSnapshotCommand, openSnapshotCommand, restoreSnapshotCommand, deleteSnapshotCommand, clearAllSnapshotsCommand, snapshotProvider, findDeadCodeCommand, deadCodeFinder);
 	
 	console.log('✅ What-The-Code extension fully activated!');
 }
