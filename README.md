@@ -42,14 +42,14 @@
 ## 🚀 Quick Start
 
 1. **Install Extension**: Get it from VS Code Marketplace or install from VSIX
-2. **Get Gemini API Key**: 
+2. **Get Gemini API Key**:
    - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
    - Create a new API key (free tier available)
 3. **Configure Extension**:
    - Open VS Code Settings (`Ctrl+,`)
    - Search for "What-The-Code"
    - Add your Gemini API key
-4. **Start Using**: 
+4. **Start Using**:
    - Press `Ctrl+Shift+Alt+K` to search your code
    - Use the sidebar panels for snapshots and dead code analysis
 
@@ -66,12 +66,12 @@
 
 ### Available Settings
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `whatTheCode.geminiApiKey` | Your Gemini API key | `""` (required) |
-| `whatTheCode.geminiModel` | AI model to use | `"gemini-1.5-flash"` |
-| `whatTheCode.maxFileSize` | Max file size to analyze | `50000` characters |
-| `whatTheCode.includedExtensions` | File types to search | JS, TS, Python, Java, etc. |
+| Setting                          | Description              | Default                    |
+| -------------------------------- | ------------------------ | -------------------------- |
+| `whatTheCode.geminiApiKey`       | Your Gemini API key      | `""` (required)            |
+| `whatTheCode.geminiModel`        | AI model to use          | `"gemini-1.5-flash"`       |
+| `whatTheCode.maxFileSize`        | Max file size to analyze | `50000` characters         |
+| `whatTheCode.includedExtensions` | File types to search     | JS, TS, Python, Java, etc. |
 
 ### Gemini Model Options
 
@@ -84,21 +84,24 @@
 ### 🔍 AI Code Search
 
 **Frontend/React Queries:**
-- *"Where are React components defined?"* - Find component files and definitions
-- *"Show me all useEffect hooks"* - Locate React hooks usage
-- *"Find CSS animations"* - Discover animation and transition code
-- *"Where is state management handled?"* - Find Redux, Zustand, or Context usage
+
+- _"Where are React components defined?"_ - Find component files and definitions
+- _"Show me all useEffect hooks"_ - Locate React hooks usage
+- _"Find CSS animations"_ - Discover animation and transition code
+- _"Where is state management handled?"_ - Find Redux, Zustand, or Context usage
 
 **Backend/API Queries:**
-- *"Where is user authentication handled?"* - Find login/auth related code
-- *"Find database queries"* - Locate database operations and SQL
-- *"Show me API endpoints"* - Find REST API route definitions
-- *"Where do we handle file uploads?"* - Find file handling code
+
+- _"Where is user authentication handled?"_ - Find login/auth related code
+- _"Find database queries"_ - Locate database operations and SQL
+- _"Show me API endpoints"_ - Find REST API route definitions
+- _"Where do we handle file uploads?"_ - Find file handling code
 
 **General Code Queries:**
-- *"Show me error handling code"* - Find try/catch blocks and error handlers
-- *"Find all TypeScript interfaces"* - Locate type definitions
-- *"Where are environment variables used?"* - Find configuration usage
+
+- _"Show me error handling code"_ - Find try/catch blocks and error handlers
+- _"Find all TypeScript interfaces"_ - Locate type definitions
+- _"Where are environment variables used?"_ - Find configuration usage
 
 ### 📸 Snapshot Management
 
@@ -117,15 +120,18 @@
 ## 🎮 Commands & Shortcuts
 
 ### Main Commands
+
 - **🔍 Ask Your Code** (`Ctrl+Shift+Alt+K`) - Open AI search dialog
 - **📌 Save Snapshot** - Save current file state
-- **🔄 Restore Snapshot** - Revert to saved checkpoint  
+- **🔄 Restore Snapshot** - Revert to saved checkpoint
 - **🧹 Find Dead Code** - Analyze unused code
 - **🔌 Test Gemini Connection** - Verify API setup
 - **⚙️ Configure Settings** - Open extension settings
 
 ### Panel Navigation
+
 Access all features through the **What-The-Code** sidebar:
+
 - **🚀 Main Actions** - Core functionality buttons
 - **🔍 Search Results** - AI search results with file links
 - **📸 Code Snapshots** - Snapshot management and restore
@@ -136,11 +142,13 @@ Access all features through the **What-The-Code** sidebar:
 **Optimized for modern development:**
 
 **Web Technologies:**
+
 - JavaScript/TypeScript (`.js`, `.ts`, `.jsx`, `.tsx`)
 - Vue.js (`.vue`)
 - Svelte (`.svelte`)
 
 **Backend Languages:**
+
 - Python (`.py`)
 - Java (`.java`)
 - C# (`.cs`)
@@ -150,13 +158,15 @@ Access all features through the **What-The-Code** sidebar:
 - Ruby (`.rb`)
 
 **Systems Programming:**
+
 - C/C++ (`.c`, `.cpp`, `.h`)
 
-*Note: Dead code analysis is optimized for JavaScript/TypeScript projects*
+_Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 
 ## 🔧 Technical Details
 
 **Architecture:**
+
 - **TypeScript** - Type-safe development
 - **VS Code Extension API** - Native IDE integration
 - **Google Gemini AI** - Advanced code understanding
@@ -164,6 +174,7 @@ Access all features through the **What-The-Code** sidebar:
 - **Local File System** - Secure snapshot management
 
 **Performance:**
+
 - **Lightweight** - No heavy dependencies (removed ts-morph)
 - **Fast Analysis** - Regex patterns vs. slow AST parsing
 - **Efficient UI** - 4-panel organized interface
@@ -172,18 +183,21 @@ Access all features through the **What-The-Code** sidebar:
 ## 💡 Tips for Better Results
 
 **AI Search Tips:**
+
 1. **Be Specific**: "Find async functions that make API calls" vs. "find functions"
 2. **Use Domain Terms**: Include keywords like "authentication", "database", "component"
 3. **Ask About Patterns**: "Show me all error handling" or "Find custom React hooks"
 4. **Context Matters**: "Where is user data validated?" vs. "find validation"
 
 **Dead Code Analysis:**
+
 1. **Start with High Confidence**: Focus on "high" confidence items first
 2. **Save Snapshots**: Always create snapshots before removing code
 3. **Test After Cleanup**: Verify your app still works after removing dead code
 4. **Review Medium/Low**: Manually verify before removing "medium" confidence items
 
 **Snapshot Management:**
+
 1. **Descriptive Names**: Use meaningful descriptions for snapshots
 2. **Regular Cleanup**: Remove old snapshots you no longer need
 3. **Before Major Changes**: Always snapshot before refactoring
@@ -200,24 +214,28 @@ Access all features through the **What-The-Code** sidebar:
 ## 🚨 Troubleshooting
 
 ### "API Key Invalid" or Connection Issues
+
 - Verify your Gemini API key is correct in settings
 - Check you have internet connection
 - Ensure API key has proper permissions
 - Try "🔌 Test Gemini Connection" command
 
 ### "No relevant code found"
-- Try rephrasing your query with more specific terms  
+
+- Try rephrasing your query with more specific terms
 - Check if target files are in included extensions list
 - Verify files aren't too large (check `maxFileSize` setting)
 - Ensure you're searching in the correct workspace
 
 ### Dead Code Analysis Issues
+
 - Analysis works best with JavaScript/TypeScript projects
 - May show false positives - always verify before deleting
 - Check file extensions are included in settings
 - Review confidence levels (focus on "high" confidence items)
 
 ### Snapshot Restore Problems
+
 - Ensure the original file still exists in the same location
 - Check file permissions (read/write access)
 - Try restarting VS Code if issues persist
@@ -225,6 +243,7 @@ Access all features through the **What-The-Code** sidebar:
 ## 🛠️ Development & Contributing
 
 **Built with:**
+
 - TypeScript for type safety
 - VS Code Extension API
 - Google Gemini AI integration
@@ -232,6 +251,12 @@ Access all features through the **What-The-Code** sidebar:
 - Modular architecture for maintainability
 
 **Contributing:**
+
+**Authors:**
+- **Sk Masum Ali** - Co-creator and Developer
+- **Saheli Das** - Co-creator and Developer
+
+**Want to contribute?**
 1. Fork the repository on GitHub
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes with proper TypeScript types
@@ -239,6 +264,7 @@ Access all features through the **What-The-Code** sidebar:
 5. Submit a pull request with detailed description
 
 **Development Setup:**
+
 ```bash
 git clone https://github.com/saheli56/what-the-code.git
 cd what-the-code
@@ -254,8 +280,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 📋 Changelog
 
 ### v1.0.0 (Latest)
+
 - ✅ AI-powered code search with Google Gemini
-- ✅ Smart dead code analysis (regex-based, lightweight)  
+- ✅ Smart dead code analysis (regex-based, lightweight)
 - ✅ File snapshots with restore functionality
 - ✅ Modern 4-panel interface design
 - ✅ Support for 16+ programming languages
