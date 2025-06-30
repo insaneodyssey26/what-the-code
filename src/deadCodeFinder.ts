@@ -5,10 +5,15 @@ import { DeadCodeAnalyzer, DeadCodeIssue } from './analyzeDeadCode';
 export class DeadCodeFinder {
     private outputChannel: vscode.OutputChannel;
     private analyzer: DeadCodeAnalyzer;
+    private lastAnalysisResults: DeadCodeIssue[] = [];
 
     constructor() {
         this.outputChannel = vscode.window.createOutputChannel('Dead Code Finder');
         this.analyzer = new DeadCodeAnalyzer();
+    }
+
+    getLastAnalysisResults(): DeadCodeIssue[] {
+        return this.lastAnalysisResults;
     }
 
     async findDeadCode(): Promise<void> {
@@ -84,6 +89,7 @@ export class DeadCodeFinder {
 
                 // Step 3: Generate report
                 progress.report({ increment: 80, message: 'Generating report...' });
+                this.lastAnalysisResults = allIssues; // Store results for potential removal
                 await this.generateReport(allIssues);
                 
                 progress.report({ increment: 100, message: 'Complete!' });

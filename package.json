@@ -5,18 +5,17 @@
   "version": "1.0.0",
   "publisher": "saheli56",
   "author": {
-    "name": "Sk Masum Ali and Saheli Das",
-    "email": "your-email@example.com"
+    "name": "Sk Masum Ali and Saheli Das"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saheli56/what-the-code.git"
+    "url": "https://github.com/insaneodyssey26/what-the-code.git"
   },
   "bugs": {
-    "url": "https://github.com/saheli56/what-the-code/issues"
+    "url": "https://github.com/insaneodyssey26/what-the-code/issues"
   },
-  "homepage": "https://github.com/saheli56/what-the-code#readme",
+  "homepage": "https://github.com/insaneodyssey26/what-the-code#readme",
   "keywords": [
     "ai",
     "code-search",
@@ -114,6 +113,24 @@
         "title": "🧹 Find Dead Code",
         "category": "What-The-Code",
         "icon": "$(search-remove)"
+      },
+      {
+        "command": "what-the-code.removeDeadCodeSafe",
+        "title": "✅ Remove Dead Code (Safe)",
+        "category": "What-The-Code",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "what-the-code.removeDeadCodeInteractive",
+        "title": "🔧 Remove Dead Code (Interactive)",
+        "category": "What-The-Code",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "what-the-code.removeDeadCodeDryRun",
+        "title": "🔍 Preview Removal (Dry Run)",
+        "category": "What-The-Code",
+        "icon": "$(eye)"
       }
     ],
     "viewsContainers": {
@@ -202,6 +219,24 @@
           "when": "view == what-the-code-dead-code",
           "group": "navigation@1",
           "icon": "$(search-remove)"
+        },
+        {
+          "command": "what-the-code.removeDeadCodeSafe",
+          "when": "view == what-the-code-dead-code",
+          "group": "navigation@2",
+          "icon": "$(trash)"
+        },
+        {
+          "command": "what-the-code.removeDeadCodeDryRun",
+          "when": "view == what-the-code-dead-code",
+          "group": "navigation@3",
+          "icon": "$(eye)"
+        },
+        {
+          "command": "what-the-code.removeDeadCodeInteractive",
+          "when": "view == what-the-code-dead-code",
+          "group": "navigation@4",
+          "icon": "$(edit)"
         }
       ],
       "view/item/context": [
@@ -275,6 +310,21 @@
             ".svelte"
           ],
           "description": "File extensions to include in code search"
+        },
+        "whatTheCode.deadCodeRemoval.createBackups": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create backup files before removing dead code"
+        },
+        "whatTheCode.deadCodeRemoval.confirmEachFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ask for confirmation before processing each file during removal"
+        },
+        "whatTheCode.deadCodeRemoval.onlyHighConfidence": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only remove high-confidence dead code items by default"
         }
       }
     }
@@ -283,18 +333,13 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "lint": "eslint src"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.101.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.25.1",
     "typescript": "^5.8.3"
   },

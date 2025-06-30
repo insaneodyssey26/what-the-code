@@ -2,7 +2,7 @@
 
 [![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=saheli56.what-the-code)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub](https://img.shields.io/badge/GitHub-saheli56%2Fwhat--the--code-black)](https://github.com/saheli56/what-the-code)
+[![GitHub](https://img.shields.io/badge/GitHub-insaneodyssey26%2Fwhat--the--code-black)](https://github.com/insaneodyssey26/what-the-code)
 
 **What-The-Code** is a powerful VS Code extension that brings AI-powered code analysis to your fingertips. Search your codebase with natural language, find dead code, and manage file snapshots with restore functionality - all in one intuitive interface!
 
@@ -16,11 +16,16 @@
 - Get precise results with detailed explanations and file locations
 - Support for 16+ programming languages
 
-### 🧹 **Smart Dead Code Analysis**
+### 🧹 **Smart Dead Code Analysis & Removal**
 
-- Find unused imports, functions, variables, and React components
-- **Regex-based static analysis** - fast and lightweight (no heavy dependencies)
-- Confidence levels (high/medium/low) to help you safely clean up code
+- **Find** unused imports, functions, variables, and React components
+- **Remove** dead code safely with multiple safety options:
+  - 🔒 **Safe Mode**: Only high-confidence items with automatic backups
+  - 🔍 **Dry Run**: Preview removals without making changes  
+  - 🔧 **Interactive**: Confirm each file before processing
+- **Pattern-based static analysis** - fast and lightweight (no heavy dependencies)
+- **Confidence levels** (high/medium/low) to help you safely clean up code
+- **Automatic backups** before making any changes
 - Supports JavaScript, TypeScript, JSX, TSX, and more
 - Reduce bundle size and improve code maintainability
 
@@ -110,12 +115,16 @@
 3. **Restore Files**: Click the 🔄 restore button to revert changes
 4. **Clean Up**: Delete individual snapshots or clear all at once
 
-### 🧹 Dead Code Analysis
+### 🧹 Dead Code Analysis & Removal
 
-1. **Run Analysis**: Click the 🧹 button in the Dead Code panel
+1. **Analyze Code**: Click the 🧹 button in the Dead Code panel
 2. **Review Results**: Check confidence levels (high/medium/low)
-3. **Safe Cleanup**: Focus on "high confidence" items first
-4. **Verify Changes**: Use snapshots before removing code
+3. **Choose Removal Method**:
+   - **Safe Mode** (✅): Remove only high-confidence items automatically
+   - **Dry Run** (🔍): Preview what would be removed (no actual changes)
+   - **Interactive** (🔧): Confirm each file before processing
+4. **Automatic Safety**: Backups created before any changes
+5. **Verify Changes**: Use snapshots to restore if needed
 
 ## 🎮 Commands & Shortcuts
 
@@ -125,6 +134,9 @@
 - **📌 Save Snapshot** - Save current file state
 - **🔄 Restore Snapshot** - Revert to saved checkpoint
 - **🧹 Find Dead Code** - Analyze unused code
+- **✅ Remove Dead Code (Safe)** - Remove high-confidence items only
+- **🔍 Preview Removal** - Dry run to see what would be removed
+- **🔧 Remove Dead Code (Interactive)** - Confirm each file
 - **🔌 Test Gemini Connection** - Verify API setup
 - **⚙️ Configure Settings** - Open extension settings
 
@@ -135,7 +147,7 @@ Access all features through the **What-The-Code** sidebar:
 - **🚀 Main Actions** - Core functionality buttons
 - **🔍 Search Results** - AI search results with file links
 - **📸 Code Snapshots** - Snapshot management and restore
-- **🧹 Dead Code Analysis** - Analysis results and cleanup suggestions
+- **🧹 Dead Code Analysis & Removal** - Analysis results and automatic cleanup options
 
 ## 📁 Supported Languages & Files
 
@@ -161,7 +173,7 @@ Access all features through the **What-The-Code** sidebar:
 
 - C/C++ (`.c`, `.cpp`, `.h`)
 
-_Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
+_Note: Dead code analysis and removal are optimized for JavaScript/TypeScript projects_
 
 ## 🔧 Technical Details
 
@@ -170,13 +182,13 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 - **TypeScript** - Type-safe development
 - **VS Code Extension API** - Native IDE integration
 - **Google Gemini AI** - Advanced code understanding
-- **Regex-based Analysis** - Fast dead code detection (no AST parsing)
+- **Pattern-based Analysis** - Fast dead code detection
 - **Local File System** - Secure snapshot management
 
-**Performance:**
+**Technical Details:**
 
-- **Lightweight** - No heavy dependencies (removed ts-morph)
-- **Fast Analysis** - Regex patterns vs. slow AST parsing
+- **Lightweight** - Minimal dependencies (only Axios for HTTP requests)
+- **Fast Analysis** - Efficient pattern-based dead code detection
 - **Efficient UI** - 4-panel organized interface
 - **Minimal Footprint** - Optimized for everyday use
 
@@ -189,12 +201,13 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 3. **Ask About Patterns**: "Show me all error handling" or "Find custom React hooks"
 4. **Context Matters**: "Where is user data validated?" vs. "find validation"
 
-**Dead Code Analysis:**
+**Dead Code Analysis & Removal:**
 
-1. **Start with High Confidence**: Focus on "high" confidence items first
-2. **Save Snapshots**: Always create snapshots before removing code
-3. **Test After Cleanup**: Verify your app still works after removing dead code
-4. **Review Medium/Low**: Manually verify before removing "medium" confidence items
+1. **Start with Safe Mode**: Use "Remove (Safe)" for high-confidence items first
+2. **Preview First**: Use "Dry Run" to see what would be removed
+3. **Automatic Backups**: All removal modes create backups automatically
+4. **Test After Cleanup**: Run your tests after removing dead code
+5. **Interactive Mode**: Use when you want to review each file manually
 
 **Snapshot Management:**
 
@@ -227,12 +240,13 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 - Verify files aren't too large (check `maxFileSize` setting)
 - Ensure you're searching in the correct workspace
 
-### Dead Code Analysis Issues
+### Dead Code Analysis & Removal Issues
 
 - Analysis works best with JavaScript/TypeScript projects
-- May show false positives - always verify before deleting
+- May show false positives - always verify before deleting (use Dry Run first)
 - Check file extensions are included in settings
-- Review confidence levels (focus on "high" confidence items)
+- Review confidence levels (start with "Safe Mode" for high confidence items)
+- Automatic backups are created, but you can also use snapshots for extra safety
 
 ### Snapshot Restore Problems
 
@@ -253,10 +267,12 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 **Contributing:**
 
 **Authors:**
+
 - **Sk Masum Ali** - Co-creator and Developer
 - **Saheli Das** - Co-creator and Developer
 
 **Want to contribute?**
+
 1. Fork the repository on GitHub
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes with proper TypeScript types
@@ -266,7 +282,7 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 **Development Setup:**
 
 ```bash
-git clone https://github.com/saheli56/what-the-code.git
+git clone https://github.com/insaneodyssey26/what-the-code.git
 cd what-the-code
 npm install
 npm run watch    # Start TypeScript compiler in watch mode
@@ -282,7 +298,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ### v1.0.0 (Latest)
 
 - ✅ AI-powered code search with Google Gemini
-- ✅ Smart dead code analysis (regex-based, lightweight)
+- ✅ Smart dead code analysis and automatic removal (pattern-based, lightweight)
 - ✅ File snapshots with restore functionality
 - ✅ Modern 4-panel interface design
 - ✅ Support for 16+ programming languages

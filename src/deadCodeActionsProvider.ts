@@ -58,6 +58,33 @@ export class DeadCodeActionsProvider implements vscode.TreeDataProvider<DeadCode
                 )
             ];
 
+            // Add removal actions if we have analysis results
+            if (this.lastAnalysisTime && this.lastAnalysisResults > 0) {
+                items.push(
+                    new DeadCodeActionItem(
+                        '✅ Remove (Safe)',
+                        'High-confidence items only',
+                        'what-the-code.removeDeadCodeSafe',
+                        new vscode.ThemeIcon('trash'),
+                        'Remove only high-confidence dead code items with automatic backups. This is the safest option.'
+                    ),
+                    new DeadCodeActionItem(
+                        '🔍 Preview Removal',
+                        'See what would be removed',
+                        'what-the-code.removeDeadCodeDryRun',
+                        new vscode.ThemeIcon('eye'),
+                        'Preview what would be removed without making actual changes. Perfect for reviewing before cleanup.'
+                    ),
+                    new DeadCodeActionItem(
+                        '🔧 Remove (Interactive)',
+                        'Confirm each file',
+                        'what-the-code.removeDeadCodeInteractive',
+                        new vscode.ThemeIcon('edit'),
+                        'Remove dead code with confirmation for each file. You can review and approve changes file by file.'
+                    )
+                );
+            }
+
             // Add status information
             if (this.lastAnalysisTime) {
                 const timeAgo = this.formatTimeAgo(this.lastAnalysisTime);
