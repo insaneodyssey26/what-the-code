@@ -5,6 +5,7 @@ import { SearchResult, AIProvider } from './types';
 import { SearchResultsProvider } from './searchResultsProvider';
 import { SnapshotProvider } from './snapshotProvider';
 import { DeadCodeFinder } from './deadCodeFinder';
+import { DeadCodeRemover, RemovalOptions } from './deadCodeRemover';
 import { MainActionsProvider } from './mainActionsProvider';
 import { DeadCodeActionsProvider } from './deadCodeActionsProvider';
 
@@ -274,8 +275,9 @@ export function activate(context: vscode.ExtensionContext) {
 		showCollapseAll: false
 	});
 
-	// Create dead code finder
+	// Create dead code finder and remover
 	const deadCodeFinder = new DeadCodeFinder();
+	const deadCodeRemover = new DeadCodeRemover();
 
 	const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
 		console.log('🔍 Search command triggered!');
@@ -416,8 +418,94 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register dead code finder command
 	const findDeadCodeCommand = vscode.commands.registerCommand('what-the-code.findDeadCode', async () => {
 		await deadCodeFinder.findDeadCode();
-		// Update the UI with analysis results (this could be enhanced to pass actual results)
-		deadCodeActionsProvider.updateAnalysisResults(0); // For now, just refresh the UI
+		// Update the UI with analysis results
+		const results = deadCodeFinder.getLastAnalysisResults();
+		deadCodeActionsProvider.updateAnalysisResults(results.length);
+	});
+
+	// Register dead code removal commands
+	const removeDeadCodeSafeCommand = vscode.commands.registerCommand('what-the-code.removeDeadCodeSafe', async () => {
+		const issues = deadCodeFinder.getLastAnalysisResults();
+		
+		if (issues.length === 0) {
+			vscode.window.showWarningMessage('No dead code analysis results found. Please run "Find Dead Code" first.');
+			return;
+		}
+
+		const highConfidenceIssues = issues.filter(issue => issue.confidence === 'high');
+		
+		if (highConfidenceIssues.length === 0) {
+			vscode.window.showInformationMessage('No high-confidence dead code found. All items need manual review.');
+			return;
+		}
+
+		const choice = await vscode.window.showWarningMessage(
+			`Remove ${highConfidenceIssues.length} high-confidence dead code items?`,
+			{ modal: true },
+			'✅ Yes, Remove Safely',
+			'🔍 Dry Run First',
+			'❌ Cancel'
+		);
+
+		if (choice === '❌ Cancel') {
+			return;
+		}
+
+		const options: RemovalOptions = {
+			createBackup: true,
+			confirmEach: false,
+			onlyHighConfidence: true,
+			dryRun: choice === '🔍 Dry Run First'
+		};
+
+		await deadCodeRemover.removeDeadCode(issues, options);
+	});
+
+	const removeDeadCodeInteractiveCommand = vscode.commands.registerCommand('what-the-code.removeDeadCodeInteractive', async () => {
+		const issues = deadCodeFinder.getLastAnalysisResults();
+		
+		if (issues.length === 0) {
+			vscode.window.showWarningMessage('No dead code analysis results found. Please run "Find Dead Code" first.');
+			return;
+		}
+
+		const choice = await vscode.window.showInformationMessage(
+			`Remove dead code interactively? You'll be asked to confirm each file.`,
+			'✅ Yes, Start Interactive',
+			'🔍 Dry Run First',
+			'❌ Cancel'
+		);
+
+		if (choice === '❌ Cancel') {
+			return;
+		}
+
+		const options: RemovalOptions = {
+			createBackup: true,
+			confirmEach: true,
+			onlyHighConfidence: false,
+			dryRun: choice === '🔍 Dry Run First'
+		};
+
+		await deadCodeRemover.removeDeadCode(issues, options);
+	});
+
+	const removeDeadCodeDryRunCommand = vscode.commands.registerCommand('what-the-code.removeDeadCodeDryRun', async () => {
+		const issues = deadCodeFinder.getLastAnalysisResults();
+		
+		if (issues.length === 0) {
+			vscode.window.showWarningMessage('No dead code analysis results found. Please run "Find Dead Code" first.');
+			return;
+		}
+
+		const options: RemovalOptions = {
+			createBackup: false,
+			confirmEach: false,
+			onlyHighConfidence: false,
+			dryRun: true
+		};
+
+		await deadCodeRemover.removeDeadCode(issues, options);
 	});
 
 	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -447,7 +535,10 @@ export function activate(context: vscode.ExtensionContext) {
 		findDeadCodeCommand, 
 		deadCodeFinder,
 		mainActionsProvider,
-		deadCodeActionsProvider
+		deadCodeActionsProvider,
+		removeDeadCodeSafeCommand,
+		removeDeadCodeInteractiveCommand,
+		removeDeadCodeDryRunCommand
 	);
 	
 	console.log('✅ What-The-Code extension fully activated!');
