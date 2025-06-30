@@ -5,18 +5,17 @@
   "version": "1.0.0",
   "publisher": "saheli56",
   "author": {
-    "name": "Sk Masum Ali and Saheli Das",
-    "email": "your-email@example.com"
+    "name": "Sk Masum Ali and Saheli Das"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saheli56/what-the-code.git"
+    "url": "https://github.com/insaneodyssey26/what-the-code.git"
   },
   "bugs": {
-    "url": "https://github.com/saheli56/what-the-code/issues"
+    "url": "https://github.com/insaneodyssey26/what-the-code/issues"
   },
-  "homepage": "https://github.com/saheli56/what-the-code#readme",
+  "homepage": "https://github.com/insaneodyssey26/what-the-code#readme",
   "keywords": [
     "ai",
     "code-search",

@@ -2,7 +2,7 @@
 
 [![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=saheli56.what-the-code)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub](https://img.shields.io/badge/GitHub-saheli56%2Fwhat--the--code-black)](https://github.com/saheli56/what-the-code)
+[![GitHub](https://img.shields.io/badge/GitHub-insaneodyssey26%2Fwhat--the--code-black)](https://github.com/insaneodyssey26/what-the-code)
 
 **What-The-Code** is a powerful VS Code extension that brings AI-powered code analysis to your fingertips. Search your codebase with natural language, find dead code, and manage file snapshots with restore functionality - all in one intuitive interface!
 
@@ -170,13 +170,13 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 - **TypeScript** - Type-safe development
 - **VS Code Extension API** - Native IDE integration
 - **Google Gemini AI** - Advanced code understanding
-- **Regex-based Analysis** - Fast dead code detection (no AST parsing)
+- **Pattern-based Analysis** - Fast dead code detection
 - **Local File System** - Secure snapshot management
 
-**Performance:**
+**Technical Details:**
 
-- **Lightweight** - No heavy dependencies (removed ts-morph)
-- **Fast Analysis** - Regex patterns vs. slow AST parsing
+- **Lightweight** - Minimal dependencies (only Axios for HTTP requests)
+- **Fast Analysis** - Efficient pattern-based dead code detection
 - **Efficient UI** - 4-panel organized interface
 - **Minimal Footprint** - Optimized for everyday use
 
@@ -266,7 +266,7 @@ _Note: Dead code analysis is optimized for JavaScript/TypeScript projects_
 **Development Setup:**
 
 ```bash
-git clone https://github.com/saheli56/what-the-code.git
+git clone https://github.com/insaneodyssey26/what-the-code.git
 cd what-the-code
 npm install
 npm run watch    # Start TypeScript compiler in watch mode
