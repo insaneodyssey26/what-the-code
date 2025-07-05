@@ -21,7 +21,7 @@
 - **Find** unused imports, functions, variables, and React components
 - **Remove** dead code safely with multiple safety options:
   - 🔒 **Safe Mode**: Only high-confidence items with automatic backups
-  - 🔍 **Dry Run**: Preview removals without making changes  
+  - 🔍 **Dry Run**: Preview removals without making changes
   - 🔧 **Interactive**: Confirm each file before processing
 - **Pattern-based static analysis** - fast and lightweight (no heavy dependencies)
 - **Confidence levels** (high/medium/low) to help you safely clean up code
