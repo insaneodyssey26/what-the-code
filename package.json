@@ -3,7 +3,7 @@
   "displayName": "What-The-Code",
   "icon": "media/logo.png",
   "description": "AI-powered code search, dead code analysis, and file snapshots. Ask questions about your codebase, find unused code, and create checkpoints.",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "publisher": "saheli56",
   "author": {
     "name": "Sk Masum Ali and Saheli Das"
