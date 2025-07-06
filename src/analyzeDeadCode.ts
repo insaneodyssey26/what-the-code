@@ -45,7 +45,7 @@ export class DeadCodeAnalyzer {
             const relativePath = path.relative(rootPath, filePath);
             
             // Analyze based on file type
-            if (this.isJavaScriptFile(filePath)) {
+            
                 issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
             } else if (this.isReactFile(filePath)) {
                 issues.push(...await this.analyzeReactFile(content, filePath, relativePath));
@@ -65,13 +65,13 @@ export class DeadCodeAnalyzer {
         const lines = content.split('\n');
         
         // Find unused imports
-        issues.push(...this.findUnusedImports(content, filePath, relativePath, lines));
+        
         
         // Find unused functions
-        issues.push(...this.findUnusedFunctions(content, filePath, relativePath, lines));
+        
         
         // Find unused variables
-        issues.push(...this.findUnusedVariables(content, filePath, relativePath, lines));
+        
         
         return issues;
     }
@@ -81,10 +81,10 @@ export class DeadCodeAnalyzer {
         const lines = content.split('\n');
         
         // Find unused React components
-        issues.push(...this.findUnusedComponents(content, filePath, relativePath, lines));
+        
         
         // Include JavaScript analysis
-        issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
+        
         
         return issues;
     }
@@ -94,7 +94,7 @@ export class DeadCodeAnalyzer {
         const lines = content.split('\n');
         
         // Find unused CSS classes/selectors
-        issues.push(...this.findUnusedCSSSelectors(content, filePath, relativePath, lines));
+        
         
         return issues;
     }
@@ -103,7 +103,7 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         
         // Match import statements
-        const importRegex = /^import\s+(?:{\s*([^}]+)\s*}|([^,\s]+)(?:\s*,\s*{\s*([^}]+)\s*})?|\*\s+as\s+(\w+))\s+from\s+['"]([^'"]+)['"];?/gm;
+        
         let match;
         
         while ((match = importRegex.exec(content)) !== null) {
@@ -114,7 +114,7 @@ export class DeadCodeAnalyzer {
             const modulePath = match[5];
             
             // Check if imports are used in the content
-            if (namedImports) {
+            
                 const imports = namedImports.split(',').map(imp => imp.trim());
                 imports.forEach(importName => {
                     if (!this.isImportUsed(importName, content)) {
@@ -169,7 +169,7 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         
         // Match function declarations
-        const functionRegex = /(?:^|\n)\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/g;
+        
         let match;
         
         while ((match = functionRegex.exec(content)) !== null) {
@@ -192,7 +192,7 @@ export class DeadCodeAnalyzer {
         }
         
         // Match arrow functions assigned to variables
-        const arrowFunctionRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/g;
+        
         
         while ((match = arrowFunctionRegex.exec(content)) !== null) {
             const functionName = match[1];
@@ -220,7 +220,7 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         
         // Match variable declarations (excluding functions)
-        const variableRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?![^;]*(?:\(.*\)\s*=>|function))[^;]+;?/g;
+        
         let match;
         
         while ((match = variableRegex.exec(content)) !== null) {
@@ -249,7 +249,7 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         
         // Match React component definitions
-        const componentRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|function)\s+([A-Z]\w*)\s*(?:=|\()/g;
+        
         let match;
         
         while ((match = componentRegex.exec(content)) !== null) {
@@ -278,7 +278,6 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         
         // This would require checking against HTML/JSX files to see which CSS classes are used
-        // For now, we'll just return empty array as CSS analysis is complex
         
         return issues;
     }
@@ -335,7 +334,7 @@ export class DeadCodeAnalyzer {
 
     // Runtime monitoring methods (for future enhancement)
     startRuntimeMonitoring(): void {
-        // This would inject monitoring code into the running application
+        
         console.log('Runtime monitoring started (not implemented yet)');
     }
 

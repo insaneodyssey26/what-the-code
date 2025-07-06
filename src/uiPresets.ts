@@ -41,7 +41,7 @@ export class UIPresets {
         const config = vscode.workspace.getConfiguration('whatTheCode');
         
         await config.update('includedExtensions', this.FRONTEND_EXTENSIONS, vscode.ConfigurationTarget.Workspace);
-        await config.update('maxFileSize', 30000, vscode.ConfigurationTarget.Workspace); // Smaller for faster UI code parsing
+        await config.update('maxFileSize', 30000, vscode.ConfigurationTarget.Workspace);
         await config.update('aiProvider', 'ollama', vscode.ConfigurationTarget.Workspace);
         await config.update('ollamaModel', 'codellama:7b-instruct', vscode.ConfigurationTarget.Workspace);
         

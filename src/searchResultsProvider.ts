@@ -60,12 +60,12 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 
 	getChildren(element?: SearchResultItem): Thenable<SearchResultItem[]> {
 		if (!element) {
-			// Root level - group results by file
+			
 			if (this.results.length === 0) {
 				return Promise.resolve([]);
 			}
 
-			// Group results by file
+			
 			const fileGroups = new Map<string, SearchResult[]>();
 			this.results.forEach(result => {
 				const filePath = result.file;
@@ -75,7 +75,7 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 				fileGroups.get(filePath)!.push(result);
 			});
 
-			// Create tree items for each file group
+			
 			const fileItems: SearchResultItem[] = [];
 			fileGroups.forEach((results, filePath) => {
 				// Get line numbers for this file
@@ -97,14 +97,14 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 					true
 				);
 				
-				// Store the actual results as a property for children
+			
 				(fileItem as any).childResults = results;
 				fileItems.push(fileItem);
 			});
 
 			return Promise.resolve(fileItems);
 		} else if (element.isGroup) {
-			// Return child results for a file group
+		
 			const childResults = (element as any).childResults as SearchResult[];
 			const childItems = childResults.map((result, index) => 
 				new SearchResultItem(
@@ -123,7 +123,7 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 	}
 
 	getParent(element: SearchResultItem): vscode.ProviderResult<SearchResultItem> {
-		return null; // Flat structure for now
+		return null;
 	}
 
 	dispose(): void {

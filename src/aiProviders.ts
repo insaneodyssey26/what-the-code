@@ -99,12 +99,12 @@ Instructions:
 Return your response as valid JSON in exactly this format:
 {
   "results": [
-    {
-      "file": "path/to/file.ext",
-      "line": 25,
-      "content": "relevant code snippet",
-      "explanation": "brief explanation of relevance"
-    }
+	{
+	  "file": "path/to/file.ext",
+	  "line": 25,
+	  "content": "relevant code snippet",
+	  "explanation": "brief explanation of relevance"
+	}
   ]
 }
 
@@ -116,7 +116,6 @@ If no relevant code is found, return: {"results": []}`;
 		let totalChars = 0;
 
 		for (const file of files) {
-			// Truncate file content to make it smaller
 			const truncatedContent = file.content.length > 1000 
 				? file.content.substring(0, 1000) + '\n... (truncated)'
 				: file.content;
@@ -130,7 +129,7 @@ ${truncatedContent}
 				context += fileSection;
 				totalChars += fileSection.length;
 			} else {
-				break; // Stop if we're reaching the limit
+				break;
 			}
 		}
 

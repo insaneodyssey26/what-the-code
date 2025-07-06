@@ -36,7 +36,7 @@ export class MainActionsProvider implements vscode.TreeDataProvider<ActionItem> 
 
     getChildren(element?: ActionItem): Thenable<ActionItem[]> {
         if (!element) {
-            // Root level - return main actions
+            
             const actions: ActionItem[] = [
                 new ActionItem(
                     '🔍 Ask Your Code',

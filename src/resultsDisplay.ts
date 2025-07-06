@@ -418,7 +418,7 @@ export class ResultsDisplay {
 		
 		function copyCode(code) {
 			navigator.clipboard.writeText(code).then(() => {
-				// Show visual feedback
+			
 				const btn = event.target;
 				const originalText = btn.innerHTML;
 				btn.innerHTML = '✅';
@@ -442,7 +442,7 @@ export class ResultsDisplay {
 			});
 		}
 		
-		// Add keyboard shortcuts
+			
 		document.addEventListener('keydown', (e) => {
 			if (e.ctrlKey || e.metaKey) {
 				switch(e.key) {

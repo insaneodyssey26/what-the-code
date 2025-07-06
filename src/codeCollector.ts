@@ -19,7 +19,7 @@ export class CodeCollector {
 		const includedExtensions = options?.includedExtensions || 
 			this.config.get<string[]>('includedExtensions', []);
 		const maxFileSize = options?.maxFileSize || 
-			this.config.get<number>('maxFileSize', 10000); // Reduced from 50000 to 10000
+			this.config.get<number>('maxFileSize', 10000);
 		const excludePatterns = options?.excludePatterns || [
 			'**/node_modules/**',
 			'**/dist/**',
@@ -50,7 +50,6 @@ export class CodeCollector {
 						});
 					}
 				} catch (error) {
-					// Skip files that can't be read
 					continue;
 				}
 			}
@@ -91,7 +90,7 @@ export class CodeCollector {
 	 */
 	prioritizeFiles(files: CodeFile[], query: string): CodeFile[] {
 		const queryTerms = query.toLowerCase().split(' ')
-			.filter(term => term.length > 2); // Ignore short words
+			.filter(term => term.length > 2);
 
 		return files
 			.map(file => ({
@@ -99,7 +98,7 @@ export class CodeCollector {
 				relevanceScore: this.calculateRelevanceScore(file, queryTerms)
 			}))
 			.sort((a, b) => b.relevanceScore - a.relevanceScore)
-			.slice(0, 5); // Limit to top 5 most relevant files for faster processing
+			.slice(0, 5);
 	}
 
 	private calculateRelevanceScore(file: CodeFile, queryTerms: string[]): number {
@@ -107,16 +106,16 @@ export class CodeCollector {
 		const content = file.content.toLowerCase();
 		const fileName = file.path.toLowerCase();
 
-		// Score based on query terms in content
+		
 		queryTerms.forEach(term => {
 			const contentMatches = (content.match(new RegExp(term, 'g')) || []).length;
 			const fileNameMatches = (fileName.match(new RegExp(term, 'g')) || []).length;
 			
 			score += contentMatches * 1;
-			score += fileNameMatches * 5; // File name matches are more important
+			score += fileNameMatches * 5;
 		});
 
-		// Boost score for certain file types/patterns
+		
 		if (fileName.includes('auth') || fileName.includes('login')) {
 			score += 2;
 		}
@@ -124,15 +123,13 @@ export class CodeCollector {
 			score += 1;
 		}
 		if (fileName.includes('test') || fileName.includes('spec')) {
-			score -= 1; // Slightly deprioritize test files
+			score -= 1;
 		}
 
 		return score;
 	}
 
-	/**
-	 * Extract important code sections (functions, classes, etc.)
-	 */
+	
 	extractCodeSections(file: CodeFile): string[] {
 		const lines = file.content.split('\n');
 		const sections: string[] = [];
@@ -151,7 +148,7 @@ export class CodeCollector {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			
-			// Check if this line starts a new section
+			const isNewSection = sectionPatterns.some(pattern => pattern.test(line));
 			const isNewSection = sectionPatterns.some(pattern => pattern.test(line));
 			
 			if (isNewSection && !inSection) {
@@ -160,7 +157,6 @@ export class CodeCollector {
 				inSection = bracketCount > 0;
 				
 				if (bracketCount === 0) {
-					// Single line function/declaration
 					sections.push(currentSection);
 					currentSection = '';
 				}
