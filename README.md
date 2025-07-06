@@ -1,4 +1,3 @@
-
 # What-The-Code 🚀
 
 Welcome to **What-The-Code** – the VS Code extension that’s like having a super-powered, code-obsessed sidekick (minus the spandex). Whether you’re a coding wizard or just trying to survive your next project, this tool is here to make your life easier, cleaner, and a lot more fun.
@@ -33,7 +32,6 @@ No PhD in computer science required. Just install, plug in your Gemini API key, 
 - **Works with lots of languages** (but especially loves JavaScript/TypeScript)
 
 ---
-
 
 ## Meet the Humans Behind the Code
 

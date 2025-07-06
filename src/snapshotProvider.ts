@@ -97,7 +97,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
     getTreeItem(element: CodeSnapshot | string): vscode.TreeItem {
         if (typeof element === 'string') {
-            // This is a header/section
+            
             return {
                 label: element,
                 collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -121,7 +121,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
     getChildren(element?: CodeSnapshot | string): Thenable<(CodeSnapshot | string)[]> {
         if (!element) {
-            // Root level - return snapshots grouped by date
+            
             if (this.snapshots.length === 0) {
                 return Promise.resolve([]);
             }
@@ -147,7 +147,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
     async openSnapshot(snapshot: CodeSnapshot): Promise<void> {
         try {
-            // Create a new untitled document with the snapshot content
+            
             const document = await vscode.workspace.openTextDocument({
                 content: snapshot.content,
                 language: snapshot.language
@@ -155,7 +155,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
             await vscode.window.showTextDocument(document);
             
-            // Show info about the snapshot
+            
             vscode.window.showInformationMessage(
                 `Opened snapshot from ${snapshot.timestamp.toLocaleString()} (${snapshot.fileName})`
             );
@@ -172,7 +172,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
                 fs.unlinkSync(snapshotFile);
             }
 
-            // Remove from memory
+            
             const index = this.snapshots.findIndex(s => s.id === snapshot.id);
             if (index >= 0) {
                 this.snapshots.splice(index, 1);
@@ -188,7 +188,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
     clearAllSnapshots(): void {
         try {
-            // Delete all snapshot files
+            
             if (fs.existsSync(this.snapshotsDir)) {
                 const files = fs.readdirSync(this.snapshotsDir).filter(f => f.endsWith('.json'));
                 files.forEach(file => {
@@ -196,7 +196,7 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
                 });
             }
 
-            // Clear memory
+            
             this.snapshots = [];
             this._onDidChangeTreeData.fire();
             vscode.window.showInformationMessage('All snapshots cleared');
@@ -208,10 +208,10 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
 
     async restoreSnapshot(snapshot: CodeSnapshot): Promise<void> {
         try {
-            // Check if the original file still exists
+            
             const fileUri = vscode.Uri.file(snapshot.filePath);
             
-            // Ask for confirmation before restoring
+            
             const choice = await vscode.window.showWarningMessage(
                 `Are you sure you want to restore "${snapshot.fileName}" to the snapshot from ${snapshot.timestamp.toLocaleString()}?\n\nThis will overwrite the current content and cannot be undone.`,
                 { modal: true },
@@ -223,25 +223,25 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
                 return;
             }
 
-            // Try to open the original file first
+            
             let document: vscode.TextDocument;
             try {
                 document = await vscode.workspace.openTextDocument(fileUri);
             } catch (error) {
-                // If file doesn't exist, create a new one
+                
                 document = await vscode.workspace.openTextDocument({
                     content: '',
                     language: snapshot.language
                 });
                 
-                // Show the new document first, then we'll save it to the original path
+                
                 await vscode.window.showTextDocument(document);
             }
 
-            // Show the document
+            
             const editor = await vscode.window.showTextDocument(document);
 
-            // Replace the entire content with the snapshot content
+            
             const edit = new vscode.WorkspaceEdit();
             const fullRange = new vscode.Range(
                 document.positionAt(0),
@@ -250,11 +250,11 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
             
             edit.replace(fileUri, fullRange, snapshot.content);
             
-            // Apply the edit
+            
             const success = await vscode.workspace.applyEdit(edit);
             
             if (success) {
-                // Save the document
+                
                 await document.save();
                 
                 vscode.window.showInformationMessage(

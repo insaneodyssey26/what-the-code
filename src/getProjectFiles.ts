@@ -43,17 +43,17 @@ export class ProjectFileCollector {
                 const fullPath = path.join(dirPath, entry.name);
 
                 if (entry.isDirectory()) {
-                    // Skip ignored directories
+                    
                     if (this.ignoredDirectories.includes(entry.name)) {
                         continue;
                     }
 
-                    // Recursively process subdirectory
+                    
                     await this.walkDirectory(fullPath, rootPath, files);
                 } else if (entry.isFile()) {
                     const ext = path.extname(entry.name);
                     
-                    // Check if it's a supported file type
+                    
                     if (this.supportedExtensions.includes(ext)) {
                         files.push({
                             filePath: fullPath,

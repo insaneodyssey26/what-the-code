@@ -28,7 +28,7 @@ export class DeadCodeFinder {
                 title: 'Finding dead code...',
                 cancellable: true
             }, async (progress, token) => {
-                // Step 1: Collect project files
+                
                 progress.report({ increment: 10, message: 'Collecting project files...' });
                 const collector = new ProjectFileCollector();
                 const files = await collector.collectProjectFiles();
@@ -50,7 +50,7 @@ export class DeadCodeFinder {
                     return;
                 }
 
-                // Step 2: Analyze files
+                
                 progress.report({ increment: 20, message: 'Analyzing files for unused code...' });
                 const allIssues: DeadCodeIssue[] = [];
                 
@@ -87,7 +87,7 @@ export class DeadCodeFinder {
                     }
                 }
 
-                // Step 3: Generate report
+                    
                 progress.report({ increment: 80, message: 'Generating report...' });
                 this.lastAnalysisResults = allIssues; // Store results for potential removal
                 await this.generateReport(allIssues);

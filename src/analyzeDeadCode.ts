@@ -39,12 +39,9 @@ export class DeadCodeAnalyzer {
 
     async analyzeFile(filePath: string, rootPath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
-        
         try {
             const content = await fs.promises.readFile(filePath, 'utf8');
             const relativePath = path.relative(rootPath, filePath);
-            
-            // Analyze based on file type
             if (this.isJavaScriptFile(filePath)) {
                 issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
             } else if (this.isReactFile(filePath)) {
@@ -52,70 +49,54 @@ export class DeadCodeAnalyzer {
             } else if (this.isCSSFile(filePath)) {
                 issues.push(...await this.analyzeCSSFile(content, filePath, relativePath));
             }
-            
         } catch (error) {
             console.warn(`Error analyzing file ${filePath}:`, error);
         }
-
         return issues;
     }
+
+    private importRegex = /import\s+(?:\{([^}]*)\}|([^,{}\s]+)|\*\s+as\s+([^\s]+))?\s*from\s*['"]([^'"]+)['"]/gm;
+    private functionRegex = /(?:^|\s)function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm;
+    private arrowFunctionRegex = /(?:^|\s)(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/gm;
+    private variableRegex = /(?:^|\s)(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=/gm;
+    private componentRegex = /(?:^|\s)(?:function\s+|const\s+)([A-Z][a-zA-Z0-9_$]*)\s*(?:\(|=)/gm;
+    private exportRegex = /export\s+(?:default\s+)?(?:function\s+|const\s+|class\s+|interface\s+|type\s+)?([a-zA-Z_$][a-zA-Z0-9_$]*)/gm;
 
     private async analyzeJavaScriptFile(content: string, filePath: string, relativePath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
         const lines = content.split('\n');
-        
-        // Find unused imports
         issues.push(...this.findUnusedImports(content, filePath, relativePath, lines));
-        
-        // Find unused functions
         issues.push(...this.findUnusedFunctions(content, filePath, relativePath, lines));
-        
-        // Find unused variables
         issues.push(...this.findUnusedVariables(content, filePath, relativePath, lines));
-        
         return issues;
     }
 
     private async analyzeReactFile(content: string, filePath: string, relativePath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
         const lines = content.split('\n');
-        
-        // Find unused React components
         issues.push(...this.findUnusedComponents(content, filePath, relativePath, lines));
-        
-        // Include JavaScript analysis
         issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
-        
         return issues;
     }
 
     private async analyzeCSSFile(content: string, filePath: string, relativePath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
         const lines = content.split('\n');
-        
-        // Find unused CSS classes/selectors
         issues.push(...this.findUnusedCSSSelectors(content, filePath, relativePath, lines));
-        
         return issues;
     }
 
     private findUnusedImports(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        
-        // Match import statements
-        const importRegex = /^import\s+(?:{\s*([^}]+)\s*}|([^,\s]+)(?:\s*,\s*{\s*([^}]+)\s*})?|\*\s+as\s+(\w+))\s+from\s+['"]([^'"]+)['"];?/gm;
         let match;
-        
-        while ((match = importRegex.exec(content)) !== null) {
+        while ((match = this.importRegex.exec(content)) !== null) {
             const lineNumber = content.substring(0, match.index).split('\n').length;
-            const namedImports = match[1] || match[3];
+            const namedImports = match[1] || '';
             const defaultImport = match[2];
-            const namespaceImport = match[4];
-            const modulePath = match[5];
-            
-            // Check if imports are used in the content
+            const namespaceImport = match[3];
+            const modulePath = match[4];
             if (namedImports) {
-                const imports = namedImports.split(',').map(imp => imp.trim());
+                const imports = namedImports.split(',').map(imp => imp.trim()).filter(Boolean);
                 imports.forEach(importName => {
                     if (!this.isImportUsed(importName, content)) {
                         issues.push({
@@ -132,7 +113,6 @@ export class DeadCodeAnalyzer {
                     }
                 });
             }
-            
             if (defaultImport && !this.isImportUsed(defaultImport, content)) {
                 issues.push({
                     type: 'unused-import',
@@ -146,7 +126,6 @@ export class DeadCodeAnalyzer {
                     category: 'dead-code'
                 });
             }
-            
             if (namespaceImport && !this.isImportUsed(namespaceImport, content)) {
                 issues.push({
                     type: 'unused-import',
@@ -161,21 +140,15 @@ export class DeadCodeAnalyzer {
                 });
             }
         }
-        
         return issues;
     }
 
     private findUnusedFunctions(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        
-        // Match function declarations
-        const functionRegex = /(?:^|\n)\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/g;
         let match;
-        
-        while ((match = functionRegex.exec(content)) !== null) {
+        while ((match = this.functionRegex.exec(content)) !== null) {
             const functionName = match[1];
             const lineNumber = content.substring(0, match.index).split('\n').length;
-            
             if (!this.isFunctionUsed(functionName, content, filePath)) {
                 issues.push({
                     type: 'unused-function',
@@ -190,14 +163,9 @@ export class DeadCodeAnalyzer {
                 });
             }
         }
-        
-        // Match arrow functions assigned to variables
-        const arrowFunctionRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/g;
-        
-        while ((match = arrowFunctionRegex.exec(content)) !== null) {
+        while ((match = this.arrowFunctionRegex.exec(content)) !== null) {
             const functionName = match[1];
             const lineNumber = content.substring(0, match.index).split('\n').length;
-            
             if (!this.isFunctionUsed(functionName, content, filePath)) {
                 issues.push({
                     type: 'unused-function',
@@ -212,21 +180,15 @@ export class DeadCodeAnalyzer {
                 });
             }
         }
-        
         return issues;
     }
 
     private findUnusedVariables(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        
-        // Match variable declarations (excluding functions)
-        const variableRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?![^;]*(?:\(.*\)\s*=>|function))[^;]+;?/g;
         let match;
-        
-        while ((match = variableRegex.exec(content)) !== null) {
+        while ((match = this.variableRegex.exec(content)) !== null) {
             const variableName = match[1];
             const lineNumber = content.substring(0, match.index).split('\n').length;
-            
             if (!this.isVariableUsed(variableName, content)) {
                 issues.push({
                     type: 'unused-variable',
@@ -241,21 +203,15 @@ export class DeadCodeAnalyzer {
                 });
             }
         }
-        
         return issues;
     }
 
     private findUnusedComponents(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        
-        // Match React component definitions
-        const componentRegex = /(?:^|\n)\s*(?:export\s+)?(?:const|function)\s+([A-Z]\w*)\s*(?:=|\()/g;
         let match;
-        
-        while ((match = componentRegex.exec(content)) !== null) {
+        while ((match = this.componentRegex.exec(content)) !== null) {
             const componentName = match[1];
             const lineNumber = content.substring(0, match.index).split('\n').length;
-            
             if (!this.isComponentUsed(componentName, content)) {
                 issues.push({
                     type: 'unused-component',
@@ -270,52 +226,86 @@ export class DeadCodeAnalyzer {
                 });
             }
         }
-        
         return issues;
     }
 
     private findUnusedCSSSelectors(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        
-        // This would require checking against HTML/JSX files to see which CSS classes are used
-        // For now, we'll just return empty array as CSS analysis is complex
-        
         return issues;
     }
 
     private isImportUsed(importName: string, content: string): boolean {
-        // Remove the import line and check if the import is used elsewhere
+        const cleanName = importName.trim();
+        if (!cleanName) {
+            return true;
+        }
+        
         const withoutImports = content.replace(/^import.*$/gm, '');
-        const usageRegex = new RegExp(`\\b${importName}\\b`, 'g');
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
         return usageRegex.test(withoutImports);
     }
 
     private isFunctionUsed(functionName: string, content: string, filePath: string): boolean {
-        // Remove the function definition and check if it's called elsewhere
-        const withoutDefinition = content.replace(new RegExp(`function\\s+${functionName}\\s*\\([^{]*{[^}]*}`, 'g'), '');
-        const usageRegex = new RegExp(`\\b${functionName}\\s*\\(`, 'g');
+        const cleanName = functionName.trim();
+        if (!cleanName) {
+            return true;
+        }
         
-        // Also check if it's exported (might be used externally)
-        const exportRegex = new RegExp(`export.*${functionName}`, 'g');
+        this.exportRegex.lastIndex = 0;
+        const isExported = this.exportRegex.test(content) && content.includes(cleanName);
+        if (isExported) {
+            return true;
+        }
         
-        return usageRegex.test(withoutDefinition) || exportRegex.test(content);
+        const withoutDefinition = content.replace(
+            new RegExp(`(?:^|\\s)function\\s+${this.escapeRegex(cleanName)}\\s*\\([^{]*\\{`, 'gm'), 
+            ''
+        ).replace(
+            new RegExp(`(?:^|\\s)(?:const|let|var)\\s+${this.escapeRegex(cleanName)}\\s*=`, 'gm'), 
+            ''
+        );
+        
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\s*\\(`, 'g');
+        return usageRegex.test(withoutDefinition);
     }
 
     private isVariableUsed(variableName: string, content: string): boolean {
-        // Remove the variable declaration and check if it's used elsewhere
-        const withoutDeclaration = content.replace(new RegExp(`(?:const|let|var)\\s+${variableName}\\s*=.*?;`, 'g'), '');
-        const usageRegex = new RegExp(`\\b${variableName}\\b`, 'g');
+        const cleanName = variableName.trim();
+        if (!cleanName) {
+            return true;
+        }
+        
+        const withoutDeclaration = content.replace(
+            new RegExp(`(?:^|\\s)(?:const|let|var)\\s+${this.escapeRegex(cleanName)}\\s*=.*?[;\\n]`, 'gm'), 
+            ''
+        );
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
         return usageRegex.test(withoutDeclaration);
     }
 
     private isComponentUsed(componentName: string, content: string): boolean {
-        // Check if component is used in JSX
-        const jsxUsageRegex = new RegExp(`<${componentName}[\\s>]`, 'g');
+        const cleanName = componentName.trim();
+        if (!cleanName) {
+            return true;
+        }
         
-        // Check if component is exported (might be used externally)
-        const exportRegex = new RegExp(`export.*${componentName}`, 'g');
+        this.exportRegex.lastIndex = 0;
+        const isExported = this.exportRegex.test(content) && content.includes(cleanName);
+        if (isExported) {
+            return true;
+        }
         
-        return jsxUsageRegex.test(content) || exportRegex.test(content);
+        const jsxUsageRegex = new RegExp(`<${this.escapeRegex(cleanName)}[\\s>/<]`, 'g');
+        const refUsageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
+        
+        return jsxUsageRegex.test(content) || refUsageRegex.test(content.replace(
+            new RegExp(`(?:^|\\s)(?:function\\s+|const\\s+)${this.escapeRegex(cleanName)}\\s*`, 'gm'), 
+            ''
+        ));
+    }
+
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     private isJavaScriptFile(filePath: string): boolean {
@@ -333,9 +323,8 @@ export class DeadCodeAnalyzer {
         return ['.css', '.scss', '.sass', '.less'].includes(ext);
     }
 
-    // Runtime monitoring methods (for future enhancement)
     startRuntimeMonitoring(): void {
-        // This would inject monitoring code into the running application
+        
         console.log('Runtime monitoring started (not implemented yet)');
     }
 
@@ -348,7 +337,6 @@ export class DeadCodeAnalyzer {
     }
 
     dispose(): void {
-        // Clean up any resources
         this.instrumentedFiles.clear();
         this.originalContent.clear();
     }
