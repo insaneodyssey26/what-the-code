@@ -42,7 +42,6 @@ export class DeadCodeAnalyzer {
         try {
             const content = await fs.promises.readFile(filePath, 'utf8');
             const relativePath = path.relative(rootPath, filePath);
-            // Analyze based on file type
             if (this.isJavaScriptFile(filePath)) {
                 issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
             } else if (this.isReactFile(filePath)) {
@@ -56,12 +55,12 @@ export class DeadCodeAnalyzer {
         return issues;
     }
 
-    // Helper regexes for code analysis
-    private importRegex = /import\s+(?:{([^}]*)}|([^,{}\s]+)|\*\s+as\s+([^\s]+))?\s*from\s*['"]([^'"]+)['"]/g;
-    private functionRegex = /function\s+([a-zA-Z0-9_]+)\s*\(/g;
-    private arrowFunctionRegex = /const\s+([a-zA-Z0-9_]+)\s*=\s*\([^)]*\)\s*=>/g;
-    private variableRegex = /(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=/g;
-    private componentRegex = /function\s+([A-Z][a-zA-Z0-9_]*)\s*\(/g;
+    private importRegex = /import\s+(?:\{([^}]*)\}|([^,{}\s]+)|\*\s+as\s+([^\s]+))?\s*from\s*['"]([^'"]+)['"]/gm;
+    private functionRegex = /(?:^|\s)function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm;
+    private arrowFunctionRegex = /(?:^|\s)(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/gm;
+    private variableRegex = /(?:^|\s)(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=/gm;
+    private componentRegex = /(?:^|\s)(?:function\s+|const\s+)([A-Z][a-zA-Z0-9_$]*)\s*(?:\(|=)/gm;
+    private exportRegex = /export\s+(?:default\s+)?(?:function\s+|const\s+|class\s+|interface\s+|type\s+)?([a-zA-Z_$][a-zA-Z0-9_$]*)/gm;
 
     private async analyzeJavaScriptFile(content: string, filePath: string, relativePath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
@@ -232,43 +231,81 @@ export class DeadCodeAnalyzer {
 
     private findUnusedCSSSelectors(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
-        // This would require checking against HTML/JSX files to see which CSS classes are used
         return issues;
     }
 
     private isImportUsed(importName: string, content: string): boolean {
-        // Remove the import line and check if the import is used elsewhere
+        const cleanName = importName.trim();
+        if (!cleanName) {
+            return true;
+        }
+        
         const withoutImports = content.replace(/^import.*$/gm, '');
-        const usageRegex = new RegExp(`\\b${importName}\\b`, 'g');
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
         return usageRegex.test(withoutImports);
     }
 
     private isFunctionUsed(functionName: string, content: string, filePath: string): boolean {
-        // Remove the function definition and check if it's called elsewhere
-        const withoutDefinition = content.replace(new RegExp(`function\\s+${functionName}\\s*\\([^{]*{[^}]*}`, 'g'), '');
-        const usageRegex = new RegExp(`\\b${functionName}\\s*\\(`, 'g');
+        const cleanName = functionName.trim();
+        if (!cleanName) {
+            return true;
+        }
         
-        // Also check if it's exported (might be used externally)
-        const exportRegex = new RegExp(`export.*${functionName}`, 'g');
+        this.exportRegex.lastIndex = 0;
+        const isExported = this.exportRegex.test(content) && content.includes(cleanName);
+        if (isExported) {
+            return true;
+        }
         
-        return usageRegex.test(withoutDefinition) || exportRegex.test(content);
+        const withoutDefinition = content.replace(
+            new RegExp(`(?:^|\\s)function\\s+${this.escapeRegex(cleanName)}\\s*\\([^{]*\\{`, 'gm'), 
+            ''
+        ).replace(
+            new RegExp(`(?:^|\\s)(?:const|let|var)\\s+${this.escapeRegex(cleanName)}\\s*=`, 'gm'), 
+            ''
+        );
+        
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\s*\\(`, 'g');
+        return usageRegex.test(withoutDefinition);
     }
 
     private isVariableUsed(variableName: string, content: string): boolean {
-        // Remove the variable declaration and check if it's used elsewhere
-        const withoutDeclaration = content.replace(new RegExp(`(?:const|let|var)\\s+${variableName}\\s*=.*?;`, 'g'), '');
-        const usageRegex = new RegExp(`\\b${variableName}\\b`, 'g');
+        const cleanName = variableName.trim();
+        if (!cleanName) {
+            return true;
+        }
+        
+        const withoutDeclaration = content.replace(
+            new RegExp(`(?:^|\\s)(?:const|let|var)\\s+${this.escapeRegex(cleanName)}\\s*=.*?[;\\n]`, 'gm'), 
+            ''
+        );
+        const usageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
         return usageRegex.test(withoutDeclaration);
     }
 
     private isComponentUsed(componentName: string, content: string): boolean {
-        // Check if component is used in JSX
-        const jsxUsageRegex = new RegExp(`<${componentName}[\\s>]`, 'g');
+        const cleanName = componentName.trim();
+        if (!cleanName) {
+            return true;
+        }
         
-        // Check if component is exported (might be used externally)
-        const exportRegex = new RegExp(`export.*${componentName}`, 'g');
+        this.exportRegex.lastIndex = 0;
+        const isExported = this.exportRegex.test(content) && content.includes(cleanName);
+        if (isExported) {
+            return true;
+        }
         
-        return jsxUsageRegex.test(content) || exportRegex.test(content);
+        const jsxUsageRegex = new RegExp(`<${this.escapeRegex(cleanName)}[\\s>/<]`, 'g');
+        const refUsageRegex = new RegExp(`\\b${this.escapeRegex(cleanName)}\\b`, 'g');
+        
+        return jsxUsageRegex.test(content) || refUsageRegex.test(content.replace(
+            new RegExp(`(?:^|\\s)(?:function\\s+|const\\s+)${this.escapeRegex(cleanName)}\\s*`, 'gm'), 
+            ''
+        ));
+    }
+
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     private isJavaScriptFile(filePath: string): boolean {
@@ -286,7 +323,6 @@ export class DeadCodeAnalyzer {
         return ['.css', '.scss', '.sass', '.less'].includes(ext);
     }
 
-    // Runtime monitoring methods (for future enhancement)
     startRuntimeMonitoring(): void {
         
         console.log('Runtime monitoring started (not implemented yet)');
@@ -301,7 +337,6 @@ export class DeadCodeAnalyzer {
     }
 
     dispose(): void {
-        // Clean up any resources
         this.instrumentedFiles.clear();
         this.originalContent.clear();
     }
