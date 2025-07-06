@@ -85,9 +85,6 @@ export class CodeCollector {
 		return languageMap[ext] || 'plaintext';
 	}
 
-	/**
-	 * Filter and prioritize files based on query relevance
-	 */
 	prioritizeFiles(files: CodeFile[], query: string): CodeFile[] {
 		const queryTerms = query.toLowerCase().split(' ')
 			.filter(term => term.length > 2);
@@ -147,10 +144,7 @@ export class CodeCollector {
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			
 			const isNewSection = sectionPatterns.some(pattern => pattern.test(line));
-			const isNewSection = sectionPatterns.some(pattern => pattern.test(line));
-			
 			if (isNewSection && !inSection) {
 				currentSection = line;
 				bracketCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
