@@ -85,8 +85,6 @@ export class DeadCodeActionsProvider implements vscode.TreeDataProvider<DeadCode
                 );
             }
 
-            // Add status information
-            
             if (this.lastAnalysisTime) {
                 const timeAgo = this.formatTimeAgo(this.lastAnalysisTime);
                 items.push(
@@ -122,8 +120,6 @@ export class DeadCodeActionsProvider implements vscode.TreeDataProvider<DeadCode
                 );
             }
 
-            // Add helpful information
-            
             items.push(
                 new DeadCodeActionItem(
                     '📖 What is Dead Code?',

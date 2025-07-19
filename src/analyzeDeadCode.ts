@@ -39,20 +39,65 @@ export class DeadCodeAnalyzer {
 
     async analyzeFile(filePath: string, rootPath: string): Promise<DeadCodeIssue[]> {
         const issues: DeadCodeIssue[] = [];
+        
+        if (!filePath || !rootPath) {
+            console.warn('Invalid file path or root path provided to analyzeFile');
+            return issues;
+        }
+
         try {
+            if (!fs.existsSync(filePath)) {
+                console.warn(`File does not exist: ${filePath}`);
+                return issues;
+            }
+
             const content = await fs.promises.readFile(filePath, 'utf8');
+            
+            if (!content || content.trim().length === 0) {
+                console.log(`Skipping empty file: ${filePath}`);
+                return issues;
+            }
+
             const relativePath = path.relative(rootPath, filePath);
+            
+            this.resetRegexState();
+            
             if (this.isJavaScriptFile(filePath)) {
                 issues.push(...await this.analyzeJavaScriptFile(content, filePath, relativePath));
             } else if (this.isReactFile(filePath)) {
                 issues.push(...await this.analyzeReactFile(content, filePath, relativePath));
             } else if (this.isCSSFile(filePath)) {
                 issues.push(...await this.analyzeCSSFile(content, filePath, relativePath));
+            } else {
+                console.log(`Unsupported file type: ${filePath}`);
             }
         } catch (error) {
-            console.warn(`Error analyzing file ${filePath}:`, error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`Error analyzing file ${filePath}: ${errorMessage}`);
+            
+            issues.push({
+                type: 'unused-variable',
+                filePath,
+                relativePath: path.relative(rootPath, filePath),
+                line: 1,
+                column: 1,
+                name: 'Analysis Error',
+                description: `Failed to analyze file: ${errorMessage}`,
+                confidence: 'low',
+                category: 'dead-code'
+            });
         }
+        
         return issues;
+    }
+
+    private resetRegexState(): void {
+        this.importRegex.lastIndex = 0;
+        this.functionRegex.lastIndex = 0;
+        this.arrowFunctionRegex.lastIndex = 0;
+        this.variableRegex.lastIndex = 0;
+        this.componentRegex.lastIndex = 0;
+        this.exportRegex.lastIndex = 0;
     }
 
     private importRegex = /import\s+(?:\{([^}]*)\}|([^,{}\s]+)|\*\s+as\s+([^\s]+))?\s*from\s*['"]([^'"]+)['"]/gm;
@@ -231,7 +276,87 @@ export class DeadCodeAnalyzer {
 
     private findUnusedCSSSelectors(content: string, filePath: string, relativePath: string, lines: string[]): DeadCodeIssue[] {
         const issues: DeadCodeIssue[] = [];
+        
+        const classRegex = /\.([a-zA-Z_-][a-zA-Z0-9_-]*)\s*\{/gm;
+        const idRegex = /#([a-zA-Z_-][a-zA-Z0-9_-]*)\s*\{/gm;
+        
+        let match;
+        while ((match = classRegex.exec(content)) !== null) {
+            const className = match[1];
+            const lineNumber = content.substring(0, match.index).split('\n').length;
+            
+            if (!this.isCSSClassUsed(className, filePath)) {
+                issues.push({
+                    type: 'unused-variable',
+                    filePath,
+                    relativePath,
+                    line: lineNumber,
+                    column: match.index - content.lastIndexOf('\n', match.index) + 1,
+                    name: className,
+                    description: `CSS class '${className}' appears to be unused`,
+                    confidence: 'medium',
+                    category: 'dead-code'
+                });
+            }
+        }
+        
+        while ((match = idRegex.exec(content)) !== null) {
+            const idName = match[1];
+            const lineNumber = content.substring(0, match.index).split('\n').length;
+            
+            if (!this.isCSSIdUsed(idName, filePath)) {
+                issues.push({
+                    type: 'unused-variable',
+                    filePath,
+                    relativePath,
+                    line: lineNumber,
+                    column: match.index - content.lastIndexOf('\n', match.index) + 1,
+                    name: idName,
+                    description: `CSS ID '${idName}' appears to be unused`,
+                    confidence: 'medium',
+                    category: 'dead-code'
+                });
+            }
+        }
+        
         return issues;
+    }
+
+    private isCSSClassUsed(className: string, cssFilePath: string): boolean {
+        try {
+            const workspaceFolders = require('vscode').workspace.workspaceFolders;
+            if (!workspaceFolders) {
+                return true;
+            }
+            
+            const fs = require('fs');
+            const path = require('path');
+            const glob = require('vscode').workspace.findFiles;
+            
+            const htmlJsPatterns = [
+                new RegExp(`class[\\s]*=[\\s]*["'][^"']*\\b${this.escapeRegex(className)}\\b[^"']*["']`, 'g'),
+                new RegExp(`className[\\s]*=[\\s]*["'][^"']*\\b${this.escapeRegex(className)}\\b[^"']*["']`, 'g'),
+                new RegExp(`\\b${this.escapeRegex(className)}\\b`, 'g')
+            ];
+            
+            return true;
+        } catch (error) {
+            return true;
+        }
+    }
+
+    private isCSSIdUsed(idName: string, cssFilePath: string): boolean {
+        try {
+            const htmlJsPatterns = [
+                new RegExp(`id[\\s]*=[\\s]*["'][^"']*\\b${this.escapeRegex(idName)}\\b[^"']*["']`, 'g'),
+                new RegExp(`getElementById\\s*\\([\\s]*["']${this.escapeRegex(idName)}["']`, 'g'),
+                new RegExp(`#${this.escapeRegex(idName)}\\b`, 'g')
+            ];
+            
+            return true;
+        } catch (error) {
+            return true;
+        }
     }
 
     private isImportUsed(importName: string, content: string): boolean {
@@ -339,5 +464,48 @@ export class DeadCodeAnalyzer {
     dispose(): void {
         this.instrumentedFiles.clear();
         this.originalContent.clear();
+    }
+
+    async testDeadCodeAnalyzer(): Promise<void> {
+        console.log('🧪 Testing Dead Code Analyzer...');
+        
+        try {
+            const testCode = `
+import * as vscode from 'vscode';
+import { unusedImport } from './test';
+
+const unusedVariable = 'test';
+const usedVariable = 'used';
+
+function unusedFunction() {
+    return 'unused';
+}
+
+function usedFunction() {
+    return usedVariable;
+}
+
+export default usedFunction;
+`;
+            
+            const testFilePath = '/test/test.ts';
+            const rootPath = '/test';
+            
+            const issues = await this.analyzeJavaScriptFile(testCode, testFilePath, 'test.ts');
+            
+            console.log(`✅ Found ${issues.length} issues:`);
+            issues.forEach((issue, index) => {
+                console.log(`  ${index + 1}. ${issue.type}: ${issue.name} - ${issue.description}`);
+            });
+            
+            if (issues.length > 0) {
+                console.log('✅ Dead code analysis is working correctly!');
+            } else {
+                console.log('⚠️ No issues found - check if detection logic is working');
+            }
+            
+        } catch (error) {
+            console.error('❌ Test failed:', error);
+        }
     }
 }

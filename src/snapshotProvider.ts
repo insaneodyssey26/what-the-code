@@ -74,14 +74,11 @@ export class SnapshotProvider implements vscode.TreeDataProvider<CodeSnapshot | 
         };
 
         try {
-            // Save to file
             const snapshotFile = path.join(this.snapshotsDir, `${snapshot.id}.json`);
             fs.writeFileSync(snapshotFile, JSON.stringify(snapshot, null, 2));
 
-            // Add to memory
             this.snapshots.unshift(snapshot);
 
-            // Refresh tree view
             this._onDidChangeTreeData.fire();
 
             vscode.window.showInformationMessage(`Snapshot saved! (${snapshot.fileName})`);

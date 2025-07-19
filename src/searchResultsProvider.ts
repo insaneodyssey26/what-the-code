@@ -78,11 +78,9 @@ export class SearchResultsProvider implements vscode.TreeDataProvider<SearchResu
 			
 			const fileItems: SearchResultItem[] = [];
 			fileGroups.forEach((results, filePath) => {
-				// Get line numbers for this file
 				const lines = results.map(r => r.line).sort((a, b) => a - b);
 				const lineRange = lines.length > 1 ? `Lines ${lines[0]}-${lines[lines.length - 1]}` : `Line ${lines[0]}`;
 				
-				// Create a representative result for the file group
 				const fileResult: SearchResult = {
 					file: filePath,
 					line: results[0].line,
