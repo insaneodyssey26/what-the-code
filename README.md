@@ -38,16 +38,18 @@ Now with advanced code quality analysis, performance monitoring, and a one-click
 
 ## New Features
 
-- **Code Quality Analyzer:**  
+- **Code Quality Analyzer:**
+
   - Type coverage, duplicate code, magic numbers, and more
   - Type safety checks and refactoring recommendations
   - Access via Command Palette or the new status bar button
 
-- **Performance Monitoring:**  
+- **Performance Monitoring:**
+
   - Tracks analysis speed, memory usage, and efficiency
   - Historical performance comparison after each run
 
-- **Status Bar Button:**  
+- **Status Bar Button:**
   - One-click “Code Quality” analysis for the current file
 
 ---
@@ -64,6 +66,46 @@ Now with advanced code quality analysis, performance monitoring, and a one-click
 - Double-check your Gemini API key
 - Make sure you’re online
 - Still stuck? [GitHub page](https://github.com/insaneodyssey26/what-the-code) has answers
+
+---
+
+## FAQ
+
+**What is dead code?**  
+Code that is never used or run, like old functions or imports you forgot to delete.
+
+**Why should I care about code quality?**  
+Good code is easier to read, fix, and build on. It helps you and your team avoid bugs and confusion.
+
+**What is a code snapshot?**  
+A backup of your file before changes, so you can restore it if needed.
+
+**Is my code sent to the cloud or kept private?**  
+Your code is analyzed locally. Only your questions (and the code you ask about) are sent to Gemini if you use AI features.
+
+**Do I need to know AI or machine learning to use this extension?**  
+No! Just install, set your API key, and use the buttons or commands.
+
+**Can I use this extension offline?**  
+Most features work offline, but AI-powered answers need an internet connection.
+
+**Will it change my code automatically?**  
+No, it only suggests changes. You decide what to apply. Snapshots are saved before any edits.
+
+**What are magic numbers?**  
+Numbers in code with no explanation (like 42 or 0.8). Use named constants instead so your code is clear.
+
+**How do I check code quality?**  
+Click the “Code Quality” button in the status bar or run the command from the Command Palette.
+
+**Which languages are supported?**  
+Works best with JavaScript and TypeScript, but many features help with other languages too.
+
+**Where do I put my Gemini API key?**  
+In VS Code settings, search for “What-The-Code”.
+
+**Can I undo changes?**  
+Yes! Snapshots are saved before changes, so you can restore your code.
 
 ---
 
