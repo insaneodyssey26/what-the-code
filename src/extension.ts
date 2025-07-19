@@ -9,6 +9,7 @@ import { DeadCodeRemover, RemovalOptions } from './deadCodeRemover';
 import { MainActionsProvider } from './mainActionsProvider';
 import { DeadCodeActionsProvider } from './deadCodeActionsProvider';
 import { runAnalyzerTests } from './testAnalyzer';
+import { CodeQualityAnalyzer } from './codeQualityAnalyzer';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	resultsProvider.updateResults(query, results);
@@ -403,11 +404,50 @@ export function activate(context: vscode.ExtensionContext) {
 		   }
 	   });
 	   
+	   const analyzeCodeQualityCommand = vscode.commands.registerCommand('what-the-code.analyzeCodeQuality', async () => {
+       const editor = vscode.window.activeTextEditor;
+       if (!editor) {
+           vscode.window.showWarningMessage('No active editor. Open a file to analyze its code quality.');
+           return;
+       }
+       const document = editor.document;
+       const content = document.getText();
+       const filePath = document.fileName;
+       const analyzer = new CodeQualityAnalyzer();
+       const metrics = analyzer.analyzeCodeQuality(content, filePath);
+       const issues = analyzer.findTypeSafetyIssues(content, filePath);
+       const recommendations = analyzer.generateRefactoringRecommendations(content, filePath);
+       let report = `📊 Code Quality Metrics for ${filePath}\n`;
+       report += `\nType Coverage: ${metrics.typesCoverage.toFixed(1)}%`;
+       report += `\nFunction Complexity: ${metrics.functionComplexity.toFixed(2)}`;
+       report += `\nDuplicate Code Blocks: ${metrics.duplicateCodeBlocks}`;
+       report += `\nUnused Parameters: ${metrics.unusedParameters}`;
+       report += `\nMagic Numbers: ${metrics.magicNumbers}`;
+       report += `\nLong Functions: ${metrics.longFunctions}`;
+       report += `\n\nType Safety Issues: ${issues.length}`;
+       issues.forEach(i => {
+           report += `\n- [${i.severity}] Line ${i.line}: ${i.message}`;
+       });
+       report += `\n\nRefactoring Recommendations: ${recommendations.length}`;
+       recommendations.forEach(r => {
+           report += `\n- [${r.severity}] Line ${r.line}: ${r.description}`;
+       });
+       vscode.window.showInformationMessage('Code Quality Analysis complete. See Output for details.');
+       const output = vscode.window.createOutputChannel('Code Quality Report');
+       output.clear();
+       output.appendLine(report);
+       output.show();
+   });
 	   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	   statusBarItem.text = '$(search) Ask Code';
 	   statusBarItem.command = 'what-the-code.searchCode';
 	   statusBarItem.tooltip = 'Search your code with AI (Ctrl+Shift+Alt+K)';
 	   statusBarItem.show();
+   const codeQualityStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+   codeQualityStatusBar.text = '$(checklist) Code Quality';
+   codeQualityStatusBar.command = 'what-the-code.analyzeCodeQuality';
+   codeQualityStatusBar.tooltip = 'Analyze code quality of the current file';
+   codeQualityStatusBar.show();
 	   console.log('Registering commands and UI elements...');
 	   context.subscriptions.push(
 			   searchCommand, 
@@ -433,7 +473,9 @@ export function activate(context: vscode.ExtensionContext) {
 			   removeDeadCodeSafeCommand,
 			   removeDeadCodeInteractiveCommand,
 			   removeDeadCodeDryRunCommand,
-			   testAnalyzerCommand
+			   testAnalyzerCommand,
+			   analyzeCodeQualityCommand,
+			   codeQualityStatusBar
 	   );
 	   console.log('✅ What-The-Code extension fully activated!');
 }

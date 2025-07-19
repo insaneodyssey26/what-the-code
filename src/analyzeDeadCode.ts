@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { PerformanceMonitor } from './performanceMonitor';
 
 export interface DeadCodeIssue {
     type: 'unused-function' | 'unused-variable' | 'unused-import' | 'unused-component' | 'unused-route';
@@ -26,6 +27,7 @@ export class DeadCodeAnalyzer {
     private runtimeStats: RuntimeStats;
     private instrumentedFiles: Set<string> = new Set();
     private originalContent: Map<string, string> = new Map();
+    private performanceMonitor: PerformanceMonitor;
 
     constructor() {
         this.runtimeStats = {
@@ -35,9 +37,11 @@ export class DeadCodeAnalyzer {
             routeUsage: new Map(),
             importUsage: new Map()
         };
+        this.performanceMonitor = new PerformanceMonitor();
     }
 
     async analyzeFile(filePath: string, rootPath: string): Promise<DeadCodeIssue[]> {
+        const fileStartTime = performance.now();
         const issues: DeadCodeIssue[] = [];
         
         if (!filePath || !rootPath) {
@@ -88,6 +92,10 @@ export class DeadCodeAnalyzer {
             });
         }
         
+        const fileEndTime = performance.now();
+        this.performanceMonitor.recordFileProcessing(fileEndTime - fileStartTime);
+        this.performanceMonitor.recordIssuesFound(issues.length);
+        
         return issues;
     }
 
@@ -135,6 +143,7 @@ export class DeadCodeAnalyzer {
         const issues: DeadCodeIssue[] = [];
         let match;
         while ((match = this.importRegex.exec(content)) !== null) {
+            this.performanceMonitor.recordRegexExecution();
             const lineNumber = content.substring(0, match.index).split('\n').length;
             const namedImports = match[1] || '';
             const defaultImport = match[2];
@@ -324,14 +333,10 @@ export class DeadCodeAnalyzer {
 
     private isCSSClassUsed(className: string, cssFilePath: string): boolean {
         try {
-            const workspaceFolders = require('vscode').workspace.workspaceFolders;
-            if (!workspaceFolders) {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
                 return true;
             }
-            
-            const fs = require('fs');
-            const path = require('path');
-            const glob = require('vscode').workspace.findFiles;
             
             const htmlJsPatterns = [
                 new RegExp(`class[\\s]*=[\\s]*["'][^"']*\\b${this.escapeRegex(className)}\\b[^"']*["']`, 'g'),
@@ -340,7 +345,8 @@ export class DeadCodeAnalyzer {
             ];
             
             return true;
-        } catch (error) {
+        } catch (error: unknown) {
+            console.warn(`Error checking CSS class usage: ${error instanceof Error ? error.message : String(error)}`);
             return true;
         }
     }
@@ -354,7 +360,8 @@ export class DeadCodeAnalyzer {
             ];
             
             return true;
-        } catch (error) {
+        } catch (error: unknown) {
+            console.warn(`Error checking CSS ID usage: ${error instanceof Error ? error.message : String(error)}`);
             return true;
         }
     }
@@ -461,9 +468,14 @@ export class DeadCodeAnalyzer {
         return this.runtimeStats;
     }
 
+    getPerformanceMonitor(): PerformanceMonitor {
+        return this.performanceMonitor;
+    }
+
     dispose(): void {
         this.instrumentedFiles.clear();
         this.originalContent.clear();
+        this.performanceMonitor.dispose();
     }
 
     async testDeadCodeAnalyzer(): Promise<void> {
