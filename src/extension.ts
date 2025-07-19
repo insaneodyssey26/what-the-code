@@ -443,12 +443,23 @@ export function activate(context: vscode.ExtensionContext) {
 	   statusBarItem.command = 'what-the-code.searchCode';
 	   statusBarItem.tooltip = 'Search your code with AI (Ctrl+Shift+Alt+K)';
 	   statusBarItem.show();
-   const codeQualityStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
-   codeQualityStatusBar.text = '$(checklist) Code Quality';
-   codeQualityStatusBar.command = 'what-the-code.analyzeCodeQuality';
-   codeQualityStatusBar.tooltip = 'Analyze code quality of the current file';
-   codeQualityStatusBar.show();
+	const codeQualityStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+	codeQualityStatusBar.text = '$(checklist) Code Quality';
+	codeQualityStatusBar.command = 'what-the-code.analyzeCodeQuality';
+	codeQualityStatusBar.tooltip = 'Analyze code quality of the current file';
+	codeQualityStatusBar.show();
+
+   
+	const feedbackStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98);
+	feedbackStatusBar.text = '$(comment-discussion) Feedback';
+	feedbackStatusBar.command = 'what-the-code.openFeedback';
+	feedbackStatusBar.tooltip = 'Send feedback or report an issue';
+	feedbackStatusBar.show();
 	   console.log('Registering commands and UI elements...');
+	   const openFeedbackCommand = vscode.commands.registerCommand('what-the-code.openFeedback', async () => {
+		   const url = 'https://github.com/insaneodyssey26/what-the-code/issues/new?labels=feedback&template=feedback.md';
+		   vscode.env.openExternal(vscode.Uri.parse(url));
+	   });
 	   context.subscriptions.push(
 			   searchCommand, 
 			   testCommand, 
@@ -475,7 +486,9 @@ export function activate(context: vscode.ExtensionContext) {
 			   removeDeadCodeDryRunCommand,
 			   testAnalyzerCommand,
 			   analyzeCodeQualityCommand,
-			   codeQualityStatusBar
+			   codeQualityStatusBar,
+			   feedbackStatusBar,
+			   openFeedbackCommand
 	   );
 	   console.log('✅ What-The-Code extension fully activated!');
 }
