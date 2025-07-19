@@ -65,6 +65,13 @@ export class MainActionsProvider implements vscode.TreeDataProvider<ActionItem> 
                     'what-the-code.openSettings',
                     new vscode.ThemeIcon('settings-gear'),
                     'Configure your API key, model preferences, and other extension settings'
+                ),
+                new ActionItem(
+                    '💬 Feedback',
+                    'Send feedback or report an issue',
+                    'what-the-code.openFeedback',
+                    new vscode.ThemeIcon('comment-discussion'),
+                    'Send feedback, suggestions, or report an issue on GitHub'
                 )
             ];
             return Promise.resolve(actions);
