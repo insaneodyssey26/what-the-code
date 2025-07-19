@@ -52,7 +52,7 @@ export class GeminiProvider implements AIProvider {
 					headers: {
 						'Content-Type': 'application/json'
 					},
-					timeout: 30000 // 30 seconds should be enough for Gemini
+					timeout: 30000
 				}
 			);
 

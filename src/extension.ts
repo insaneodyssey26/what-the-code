@@ -8,6 +8,7 @@ import { DeadCodeFinder } from './deadCodeFinder';
 import { DeadCodeRemover, RemovalOptions } from './deadCodeRemover';
 import { MainActionsProvider } from './mainActionsProvider';
 import { DeadCodeActionsProvider } from './deadCodeActionsProvider';
+import { runAnalyzerTests } from './testAnalyzer';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	resultsProvider.updateResults(query, results);
@@ -392,6 +393,16 @@ export function activate(context: vscode.ExtensionContext) {
 			   };
 			   await deadCodeRemover.removeDeadCode(issues, options);
 	   });
+	   
+	   const testAnalyzerCommand = vscode.commands.registerCommand('what-the-code.testAnalyzer', async () => {
+		   try {
+			   await runAnalyzerTests();
+		   } catch (error) {
+			   const errorMessage = error instanceof Error ? error.message : String(error);
+			   vscode.window.showErrorMessage(`Test failed: ${errorMessage}`);
+		   }
+	   });
+	   
 	   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	   statusBarItem.text = '$(search) Ask Code';
 	   statusBarItem.command = 'what-the-code.searchCode';
@@ -421,7 +432,8 @@ export function activate(context: vscode.ExtensionContext) {
 			   deadCodeActionsProvider,
 			   removeDeadCodeSafeCommand,
 			   removeDeadCodeInteractiveCommand,
-			   removeDeadCodeDryRunCommand
+			   removeDeadCodeDryRunCommand,
+			   testAnalyzerCommand
 	   );
 	   console.log('✅ What-The-Code extension fully activated!');
 }

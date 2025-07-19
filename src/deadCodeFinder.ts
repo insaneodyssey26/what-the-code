@@ -69,7 +69,7 @@ export class DeadCodeFinder {
                     }
 
                     processedFiles++;
-                    const progressPercent = Math.floor((processedFiles / totalFiles) * 60); // 60% of progress for analysis
+                    const progressPercent = Math.floor((processedFiles / totalFiles) * 60);
                     progress.report({ 
                         increment: 0, 
                         message: `Analyzing ${file.relativePath} (${processedFiles}/${totalFiles})` 
@@ -89,12 +89,11 @@ export class DeadCodeFinder {
 
                     
                 progress.report({ increment: 80, message: 'Generating report...' });
-                this.lastAnalysisResults = allIssues; // Store results for potential removal
+                this.lastAnalysisResults = allIssues;
                 await this.generateReport(allIssues);
                 
                 progress.report({ increment: 100, message: 'Complete!' });
                 
-                // Show completion message
                 if (allIssues.length === 0) {
                     vscode.window.showInformationMessage('No obviously unused code found ✅');
                 } else {
@@ -130,7 +129,6 @@ export class DeadCodeFinder {
             return;
         }
 
-        // Summary
         const summary = this.generateSummary(issues);
         this.log(`\n📈 SUMMARY:`);
         this.log(`   Total Issues: ${issues.length}`);
@@ -140,7 +138,6 @@ export class DeadCodeFinder {
         this.log(`   Unused Components: ${summary.unusedComponents}`);
         this.log(`   Files Affected: ${summary.affectedFiles.size}`);
 
-        // Confidence breakdown
         const highConfidence = issues.filter(i => i.confidence === 'high').length;
         const mediumConfidence = issues.filter(i => i.confidence === 'medium').length;
         const lowConfidence = issues.filter(i => i.confidence === 'low').length;
@@ -150,7 +147,6 @@ export class DeadCodeFinder {
         this.log(`   Medium Confidence: ${mediumConfidence} (review carefully)`);
         this.log(`   Low Confidence: ${lowConfidence} (might be false positives)`);
 
-        // Group by file
         const issuesByFile = this.groupIssuesByFile(issues);
 
         this.log(`\n🔍 DETAILED FINDINGS:`);
@@ -164,7 +160,6 @@ export class DeadCodeFinder {
             });
         }
 
-        // Actionable recommendations
         this.log(`\n💡 ACTIONABLE RECOMMENDATIONS:`);
         
         if (summary.unusedImports > 0) {
@@ -248,7 +243,6 @@ export class DeadCodeFinder {
             grouped.get(issue.relativePath)!.push(issue);
         });
 
-        // Sort by file path
         return new Map([...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)));
     }
 

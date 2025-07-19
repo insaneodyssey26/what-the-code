@@ -361,7 +361,6 @@ export class ResultsDisplay {
 			.code-actions { flex-direction: column; }
 		}
 		
-		/* Scrollbar styling */
 		::-webkit-scrollbar {
 			width: 8px;
 			height: 8px;
@@ -448,11 +447,9 @@ export class ResultsDisplay {
 				switch(e.key) {
 					case 'f':
 						e.preventDefault();
-						// Focus search would go here
 						break;
 					case 'Enter':
 						e.preventDefault();
-						// Open first result
 						const firstResult = document.querySelector('.result-item');
 						if (firstResult) {
 							const file = firstResult.dataset.file;
