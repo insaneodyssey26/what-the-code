@@ -1,15 +1,18 @@
 import * as vscode from 'vscode';
 import { ProjectFileCollector, ProjectFile } from './getProjectFiles';
 import { DeadCodeAnalyzer, DeadCodeIssue } from './analyzeDeadCode';
+import { CodeQualityAnalyzer, CodeQualityMetrics } from './codeQualityAnalyzer';
 
 export class DeadCodeFinder {
     private outputChannel: vscode.OutputChannel;
     private analyzer: DeadCodeAnalyzer;
+    private codeQualityAnalyzer: CodeQualityAnalyzer;
     private lastAnalysisResults: DeadCodeIssue[] = [];
 
     constructor() {
         this.outputChannel = vscode.window.createOutputChannel('Dead Code Finder');
         this.analyzer = new DeadCodeAnalyzer();
+        this.codeQualityAnalyzer = new CodeQualityAnalyzer();
     }
 
     getLastAnalysisResults(): DeadCodeIssue[] {
@@ -28,10 +31,13 @@ export class DeadCodeFinder {
                 title: 'Finding dead code...',
                 cancellable: true
             }, async (progress, token) => {
+                const performanceMonitor = this.analyzer.getPerformanceMonitor();
                 
                 progress.report({ increment: 10, message: 'Collecting project files...' });
                 const collector = new ProjectFileCollector();
                 const files = await collector.collectProjectFiles();
+                
+                const sessionId = performanceMonitor.startAnalysisSession(files.length);
                 
                 if (token.isCancellationRequested) {
                     return;
@@ -90,6 +96,18 @@ export class DeadCodeFinder {
                     
                 progress.report({ increment: 80, message: 'Generating report...' });
                 this.lastAnalysisResults = allIssues;
+                
+                const session = performanceMonitor.endAnalysisSession(sessionId);
+                if (session) {
+                    const performanceReport = performanceMonitor.generatePerformanceReport(sessionId);
+                    this.log(performanceReport);
+                    
+                    const comparison = performanceMonitor.compareWithPrevious(sessionId);
+                    if (comparison) {
+                        this.log(comparison);
+                    }
+                }
+                
                 await this.generateReport(allIssues);
                 
                 progress.report({ increment: 100, message: 'Complete!' });
