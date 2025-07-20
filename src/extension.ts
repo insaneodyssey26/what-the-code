@@ -610,6 +610,17 @@ export function activate(context: vscode.ExtensionContext) {
        }
    });
    
+   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportPath: string) => {
+       try {
+           const deleted = await htmlReportGenerator.deleteReport(reportPath);
+           if (deleted && reportsProvider) {
+               reportsProvider.refresh();
+           }
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to delete report: ${error}`);
+       }
+   });
+   
    const openReportsFolderCommand = vscode.commands.registerCommand('what-the-code.openReportsFolder', async () => {
        try {
            const uri = vscode.Uri.file(htmlReportGenerator.getReportsPath());
@@ -667,6 +678,7 @@ export function activate(context: vscode.ExtensionContext) {
 			   generateFileReportCommand,
 			   generateProjectReportCommand,
 			   openReportCommand,
+			   deleteReportCommand,
 			   openReportsFolderCommand,
 			   htmlReportGenerator,
 			   reportsProvider

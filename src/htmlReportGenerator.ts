@@ -980,6 +980,35 @@ export class HTMLReportGenerator {
         }
     }
 
+    async deleteReport(reportPath: string): Promise<boolean> {
+        try {
+            if (!fs.existsSync(reportPath)) {
+                vscode.window.showWarningMessage('Report file does not exist.');
+                return false;
+            }
+
+            const fileName = path.basename(reportPath);
+            const result = await vscode.window.showWarningMessage(
+                `Are you sure you want to delete the report "${fileName}"?`,
+                { modal: true },
+                'Delete',
+                'Cancel'
+            );
+
+            if (result === 'Delete') {
+                fs.unlinkSync(reportPath);
+                this.outputChannel.appendLine(`🗑️ Deleted report: ${reportPath}`);
+                vscode.window.showInformationMessage(`Report "${fileName}" has been deleted.`);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            this.outputChannel.appendLine(`❌ Failed to delete report: ${error}`);
+            vscode.window.showErrorMessage(`Failed to delete report: ${error}`);
+            return false;
+        }
+    }
+
     getReportsPath(): string {
         return this.reportsPath;
     }

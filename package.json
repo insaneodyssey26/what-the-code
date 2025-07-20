@@ -156,6 +156,12 @@
         "title": "📖 Open Report",
         "category": "What-The-Code",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "what-the-code.deleteReport",
+        "title": "🗑️ Delete Report",
+        "category": "What-The-Code",
+        "icon": "$(trash)"
       }
     ],
     "viewsContainers": {
@@ -306,6 +312,12 @@
           "when": "view == what-the-code-reports && viewItem == report",
           "group": "inline@1",
           "icon": "$(go-to-file)"
+        },
+        {
+          "command": "what-the-code.deleteReport",
+          "when": "view == what-the-code-reports && viewItem == report",
+          "group": "inline@2",
+          "icon": "$(trash)"
         }
       ]
     },
