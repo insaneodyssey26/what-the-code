@@ -10,6 +10,10 @@ import { MainActionsProvider } from './mainActionsProvider';
 import { DeadCodeActionsProvider } from './deadCodeActionsProvider';
 import { runAnalyzerTests } from './testAnalyzer';
 import { CodeQualityAnalyzer } from './codeQualityAnalyzer';
+import { HTMLReportGenerator } from './htmlReportGenerator';
+import { ReportsProvider } from './reportsProvider';
+import { DeadCodeAnalyzer } from './analyzeDeadCode';
+import { ProjectFileCollector } from './getProjectFiles';
 
 async function displayResults(query: string, results: SearchResult[], resultsProvider: SearchResultsProvider) {
 	resultsProvider.updateResults(query, results);
@@ -217,6 +221,15 @@ export function activate(context: vscode.ExtensionContext) {
 			   treeDataProvider: deadCodeActionsProvider,
 			   showCollapseAll: false
 	   });
+	   
+	   // Initialize HTML Report Generator
+	   const htmlReportGenerator = new HTMLReportGenerator();
+	   const reportsProvider = new ReportsProvider(htmlReportGenerator.getReportsPath());
+	   vscode.window.createTreeView('what-the-code-reports', {
+			   treeDataProvider: reportsProvider,
+			   showCollapseAll: false
+	   });
+	   
 	   const deadCodeFinder = new DeadCodeFinder();
 	   const deadCodeRemover = new DeadCodeRemover();
 	   const searchCommand = vscode.commands.registerCommand('what-the-code.searchCode', async () => {
@@ -438,6 +451,185 @@ export function activate(context: vscode.ExtensionContext) {
        output.appendLine(report);
        output.show();
    });
+   
+   // Report Generation Commands
+   const generateFileReportCommand = vscode.commands.registerCommand('what-the-code.generateFileReport', async () => {
+       const editor = vscode.window.activeTextEditor;
+       if (!editor) {
+           vscode.window.showWarningMessage('No active editor. Open a file to generate a report.');
+           return;
+       }
+       
+       await vscode.window.withProgress({
+           location: vscode.ProgressLocation.Notification,
+           title: 'Generating file report...',
+           cancellable: false
+       }, async (progress) => {
+           try {
+               progress.report({ increment: 25, message: 'Analyzing code quality...' });
+               
+               const document = editor.document;
+               const content = document.getText();
+               const filePath = document.fileName;
+               
+               const analyzer = new CodeQualityAnalyzer();
+               const metrics = analyzer.analyzeCodeQuality(content, filePath);
+               const typeSafetyIssues = analyzer.findTypeSafetyIssues(content, filePath);
+               const refactoringRecommendations = analyzer.generateRefactoringRecommendations(content, filePath);
+               
+               progress.report({ increment: 50, message: 'Checking for dead code...' });
+               
+               const deadCodeAnalyzer = new DeadCodeAnalyzer();
+               const deadCodeIssues = await deadCodeAnalyzer.analyzeFile(filePath, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '');
+               
+               progress.report({ increment: 75, message: 'Generating HTML report...' });
+               
+               const reportPath = await htmlReportGenerator.generateFileReport(
+                   filePath,
+                   metrics,
+                   typeSafetyIssues,
+                   refactoringRecommendations,
+                   deadCodeIssues
+               );
+               
+               progress.report({ increment: 100, message: 'Complete!' });
+               
+               const choice = await vscode.window.showInformationMessage(
+                   `📄 File report generated successfully!`,
+                   'Open Report',
+                   'Open Reports Folder'
+               );
+               
+               if (choice === 'Open Report') {
+                   await htmlReportGenerator.openReport(reportPath);
+               } else if (choice === 'Open Reports Folder') {
+                   const uri = vscode.Uri.file(htmlReportGenerator.getReportsPath());
+                   await vscode.env.openExternal(uri);
+               }
+               
+               reportsProvider.refresh();
+               
+           } catch (error) {
+               vscode.window.showErrorMessage(`Failed to generate report: ${error}`);
+           }
+       });
+   });
+   
+   const generateProjectReportCommand = vscode.commands.registerCommand('what-the-code.generateProjectReport', async () => {
+       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+       if (!workspaceFolder) {
+           vscode.window.showWarningMessage('No workspace folder found. Open a project to generate a project report.');
+           return;
+       }
+       
+       await vscode.window.withProgress({
+           location: vscode.ProgressLocation.Notification,
+           title: 'Generating project report...',
+           cancellable: true
+       }, async (progress, token) => {
+           try {
+               progress.report({ increment: 10, message: 'Collecting project files...' });
+               
+               const fileCollector = new ProjectFileCollector();
+               const files = await fileCollector.collectProjectFiles();
+               
+               if (token.isCancellationRequested) return;
+               
+               const reports = [];
+               const analyzer = new CodeQualityAnalyzer();
+               const deadCodeAnalyzer = new DeadCodeAnalyzer();
+               
+               for (let i = 0; i < Math.min(files.length, 20); i++) { // Limit to 20 files for performance
+                   if (token.isCancellationRequested) return;
+                   
+                   const file = files[i];
+                   progress.report({ 
+                       increment: (70 / Math.min(files.length, 20)), 
+                       message: `Analyzing ${file.relativePath}...` 
+                   });
+                   
+                   try {
+                       const content = await vscode.workspace.fs.readFile(vscode.Uri.file(file.filePath));
+                       const textContent = Buffer.from(content).toString('utf8');
+                       
+                       const metrics = analyzer.analyzeCodeQuality(textContent, file.filePath);
+                       const typeSafetyIssues = analyzer.findTypeSafetyIssues(textContent, file.filePath);
+                       const refactoringRecommendations = analyzer.generateRefactoringRecommendations(textContent, file.filePath);
+                       const deadCodeIssues = await deadCodeAnalyzer.analyzeFile(file.filePath, workspaceFolder.uri.fsPath);
+                       
+                       reports.push({
+                           filePath: file.filePath,
+                           relativePath: file.relativePath,
+                           timestamp: new Date(),
+                           metrics,
+                           typeSafetyIssues,
+                           refactoringRecommendations,
+                           deadCodeIssues,
+                           fileSize: textContent.length,
+                           lineCount: textContent.split('\n').length
+                       });
+                   } catch (error) {
+                       console.error(`Error analyzing file ${file.filePath}:`, error);
+                   }
+               }
+               
+               if (token.isCancellationRequested) return;
+               
+               progress.report({ increment: 90, message: 'Generating HTML report...' });
+               
+               const reportPath = await htmlReportGenerator.generateProjectReport(reports);
+               
+               progress.report({ increment: 100, message: 'Complete!' });
+               
+               const choice = await vscode.window.showInformationMessage(
+                   `📊 Project report generated successfully! (${reports.length} files analyzed)`,
+                   'Open Report',
+                   'Open Reports Folder'
+               );
+               
+               if (choice === 'Open Report') {
+                   await htmlReportGenerator.openReport(reportPath);
+               } else if (choice === 'Open Reports Folder') {
+                   const uri = vscode.Uri.file(htmlReportGenerator.getReportsPath());
+                   await vscode.env.openExternal(uri);
+               }
+               
+               reportsProvider.refresh();
+               
+           } catch (error) {
+               vscode.window.showErrorMessage(`Failed to generate project report: ${error}`);
+           }
+       });
+   });
+   
+   const openReportCommand = vscode.commands.registerCommand('what-the-code.openReport', async (reportPath: string) => {
+       try {
+           await htmlReportGenerator.openReport(reportPath);
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to open report: ${error}`);
+       }
+   });
+   
+   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportPath: string) => {
+       try {
+           const deleted = await htmlReportGenerator.deleteReport(reportPath);
+           if (deleted && reportsProvider) {
+               reportsProvider.refresh();
+           }
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to delete report: ${error}`);
+       }
+   });
+   
+   const openReportsFolderCommand = vscode.commands.registerCommand('what-the-code.openReportsFolder', async () => {
+       try {
+           const uri = vscode.Uri.file(htmlReportGenerator.getReportsPath());
+           await vscode.env.openExternal(uri);
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to open reports folder: ${error}`);
+       }
+   });
+   
 	   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	   statusBarItem.text = '$(search) Ask Code';
 	   statusBarItem.command = 'what-the-code.searchCode';
@@ -482,7 +674,14 @@ export function activate(context: vscode.ExtensionContext) {
 			   testAnalyzerCommand,
 			   analyzeCodeQualityCommand,
 			   codeQualityStatusBar,
-			   openFeedbackCommand
+			   openFeedbackCommand,
+			   generateFileReportCommand,
+			   generateProjectReportCommand,
+			   openReportCommand,
+			   deleteReportCommand,
+			   openReportsFolderCommand,
+			   htmlReportGenerator,
+			   reportsProvider
 	   );
 	   console.log('✅ What-The-Code extension fully activated!');
 }

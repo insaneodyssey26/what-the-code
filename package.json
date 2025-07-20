@@ -132,6 +132,36 @@
         "title": "🔍 Preview Removal (Dry Run)",
         "category": "What-The-Code",
         "icon": "$(eye)"
+      },
+      {
+        "command": "what-the-code.generateFileReport",
+        "title": "📄 Generate File Report",
+        "category": "What-The-Code",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "what-the-code.generateProjectReport",
+        "title": "📊 Generate Project Report",
+        "category": "What-The-Code",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "what-the-code.openReportsFolder",
+        "title": "📁 Open Reports Folder",
+        "category": "What-The-Code",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "what-the-code.openReport",
+        "title": "📖 Open Report",
+        "category": "What-The-Code",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "what-the-code.deleteReport",
+        "title": "🗑️ Delete Report",
+        "category": "What-The-Code",
+        "icon": "$(trash)"
       }
     ],
     "viewsContainers": {
@@ -168,6 +198,12 @@
           "name": "🧹 Dead Code Analysis",
           "when": "true",
           "icon": "$(search-remove)"
+        },
+        {
+          "id": "what-the-code-reports",
+          "name": "📄 Quality Reports",
+          "when": "true",
+          "icon": "$(file-text)"
         }
       ]
     },
@@ -238,6 +274,24 @@
           "when": "view == what-the-code-dead-code",
           "group": "navigation@4",
           "icon": "$(edit)"
+        },
+        {
+          "command": "what-the-code.generateFileReport",
+          "when": "view == what-the-code-reports",
+          "group": "navigation@1",
+          "icon": "$(file-text)"
+        },
+        {
+          "command": "what-the-code.generateProjectReport",
+          "when": "view == what-the-code-reports",
+          "group": "navigation@2",
+          "icon": "$(graph)"
+        },
+        {
+          "command": "what-the-code.openReportsFolder",
+          "when": "view == what-the-code-reports",
+          "group": "navigation@3",
+          "icon": "$(folder-opened)"
         }
       ],
       "view/item/context": [
@@ -252,6 +306,18 @@
           "when": "view == what-the-code-snapshots && viewItem == snapshot",
           "group": "inline@2",
           "icon": "$(trash)"
+        },
+        {
+          "command": "what-the-code.openReport",
+          "when": "view == what-the-code-reports && viewItem == report",
+          "group": "inline@1",
+          "icon": "$(go-to-file)"
+        },
+        {
+          "command": "what-the-code.deleteReport",
+          "when": "view == what-the-code-reports && viewItem == report",
+          "group": "inline@2",
+          "icon": "$(trash)"
         }
       ]
     },
@@ -260,6 +326,11 @@
         "command": "what-the-code.searchCode",
         "key": "ctrl+shift+alt+k",
         "mac": "cmd+shift+alt+k"
+      },
+      {
+        "command": "what-the-code.generateFileReport",
+        "key": "ctrl+shift+alt+r",
+        "mac": "cmd+shift+alt+r"
       }
     ],
     "configuration": {
@@ -326,6 +397,21 @@
           "type": "boolean",
           "default": true,
           "description": "Only remove high-confidence dead code items by default"
+        },
+        "whatTheCode.reports.openAfterGeneration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open HTML reports after generation"
+        },
+        "whatTheCode.reports.includeCharts": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include interactive charts in project reports"
+        },
+        "whatTheCode.reports.maxFilesInProjectReport": {
+          "type": "number",
+          "default": 20,
+          "description": "Maximum number of files to analyze in project reports (for performance)"
         }
       }
     }
