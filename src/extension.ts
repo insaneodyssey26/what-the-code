@@ -638,6 +638,14 @@ export function activate(context: vscode.ExtensionContext) {
        }
    });
    
+   const openTeamLeaderboardCommand = vscode.commands.registerCommand('what-the-code.openTeamLeaderboard', async () => {
+       try {
+           await htmlReportGenerator.openTeamLeaderboard();
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to open team leaderboard: ${error}`);
+       }
+   });
+   
 	   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	   statusBarItem.text = '$(search) Ask Code';
 	   statusBarItem.command = 'what-the-code.searchCode';
@@ -688,6 +696,7 @@ export function activate(context: vscode.ExtensionContext) {
 			   openReportCommand,
 			   deleteReportCommand,
 			   openReportsFolderCommand,
+			   openTeamLeaderboardCommand,
 			   htmlReportGenerator,
 			   reportsProvider
 	   );

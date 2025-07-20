@@ -4,6 +4,7 @@ import * as path from 'path';
 import { CodeQualityMetrics, TypeSafetyIssue, RefactoringRecommendation } from './codeQualityAnalyzer';
 import { DeadCodeIssue } from './analyzeDeadCode';
 import { SearchResult } from './types';
+import { TeamLeaderboard } from './teamLeaderboard';
 
 export interface FileAnalysisReport {
     filePath: string;
@@ -33,9 +34,11 @@ export interface ProjectReport {
 export class HTMLReportGenerator {
     private outputChannel: vscode.OutputChannel;
     private reportsPath: string;
+    private teamLeaderboard: TeamLeaderboard;
 
     constructor() {
         this.outputChannel = vscode.window.createOutputChannel('What-The-Code Reports');
+        this.teamLeaderboard = new TeamLeaderboard();
         
         // Create reports directory in workspace, but use file name for file reports
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -87,6 +90,9 @@ export class HTMLReportGenerator {
         const reportPath = path.join(this.reportsPath, fileName);
         
         fs.writeFileSync(reportPath, htmlContent, 'utf8');
+        
+        // Update team leaderboard with this report
+        await this.teamLeaderboard.updateContributorStats(report);
         
         this.outputChannel.appendLine(`📄 Report generated: ${reportPath}`);
         return reportPath;
@@ -1039,6 +1045,15 @@ export class HTMLReportGenerator {
         }
     }
 
+    async openTeamLeaderboard(): Promise<void> {
+        try {
+            await this.teamLeaderboard.openLeaderboard();
+        } catch (error) {
+            this.outputChannel.appendLine(`❌ Failed to open team leaderboard: ${error}`);
+            vscode.window.showErrorMessage(`Failed to open team leaderboard: ${error}`);
+        }
+    }
+
     async deleteReport(reportPath: string): Promise<boolean> {
         try {
             this.outputChannel.appendLine(`🔍 Attempting to delete report: ${reportPath}`);
@@ -1092,5 +1107,6 @@ export class HTMLReportGenerator {
 
     dispose(): void {
         this.outputChannel.dispose();
+        this.teamLeaderboard.dispose();
     }
 }

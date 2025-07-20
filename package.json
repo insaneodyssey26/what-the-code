@@ -162,6 +162,12 @@
         "title": "🗑️ Delete Report",
         "category": "What-The-Code",
         "icon": "$(trash)"
+      },
+      {
+        "command": "what-the-code.openTeamLeaderboard",
+        "title": "🏆 Open Team Leaderboard",
+        "category": "What-The-Code",
+        "icon": "$(trophy)"
       }
     ],
     "viewsContainers": {
@@ -292,6 +298,12 @@
           "when": "view == what-the-code-reports",
           "group": "navigation@3",
           "icon": "$(folder-opened)"
+        },
+        {
+          "command": "what-the-code.openTeamLeaderboard",
+          "when": "view == what-the-code-reports",
+          "group": "navigation@4",
+          "icon": "$(trophy)"
         }
       ],
       "view/item/context": [
@@ -331,6 +343,11 @@
         "command": "what-the-code.generateFileReport",
         "key": "ctrl+shift+alt+r",
         "mac": "cmd+shift+alt+r"
+      },
+      {
+        "command": "what-the-code.openTeamLeaderboard",
+        "key": "ctrl+shift+alt+l",
+        "mac": "cmd+shift+alt+l"
       }
     ],
     "configuration": {
