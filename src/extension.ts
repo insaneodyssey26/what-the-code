@@ -610,8 +610,16 @@ export function activate(context: vscode.ExtensionContext) {
        }
    });
    
-   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportPath: string) => {
+   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportInfo: any) => {
        try {
+           // Handle both direct file path (string) and ReportInfo object
+           const reportPath = typeof reportInfo === 'string' ? reportInfo : reportInfo?.filePath;
+           
+           if (!reportPath) {
+               vscode.window.showErrorMessage('Invalid report path provided.');
+               return;
+           }
+           
            const deleted = await htmlReportGenerator.deleteReport(reportPath);
            if (deleted && reportsProvider) {
                reportsProvider.refresh();

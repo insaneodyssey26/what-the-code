@@ -69,9 +69,30 @@ export class ReportsProvider implements vscode.TreeDataProvider<ReportInfo> {
         return files.map((file: string) => {
             const filePath = path.join(this.reportsPath, file);
             const stats = fs.statSync(filePath);
-            const isProjectReport = file.includes('project-report');
+            const isProjectReport = file.startsWith('Project_');
             
-            const fileName = file.replace(/\.(html)$/, '').replace(/^(file-report-|project-report-)/, '');
+            // Extract a cleaner display name from the new naming format
+            let fileName = file.replace(/\.(html)$/, ''); // Remove .html
+            
+            if (isProjectReport) {
+                // For project reports: Project_name_YYYY-MM-DD_HH-MM.html -> "name (YYYY-MM-DD HH:MM)"
+                const parts = fileName.split('_');
+                if (parts.length >= 4) {
+                    const name = parts[1];
+                    const date = parts[2];
+                    const time = parts[3].replace('-', ':');
+                    fileName = `${name} (${date} ${time})`;
+                }
+            } else {
+                // For file reports: filename_YYYY-MM-DD_HH-MM.html -> "filename (YYYY-MM-DD HH:MM)"
+                const parts = fileName.split('_');
+                if (parts.length >= 3) {
+                    const name = parts[0];
+                    const date = parts[1];
+                    const time = parts[2].replace('-', ':');
+                    fileName = `${name} (${date} ${time})`;
+                }
+            }
 
             return {
                 filePath,
