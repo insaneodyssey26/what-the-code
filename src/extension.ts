@@ -610,8 +610,16 @@ export function activate(context: vscode.ExtensionContext) {
        }
    });
    
-   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportPath: string) => {
+   const deleteReportCommand = vscode.commands.registerCommand('what-the-code.deleteReport', async (reportInfo: any) => {
        try {
+           // Handle both direct file path (string) and ReportInfo object
+           const reportPath = typeof reportInfo === 'string' ? reportInfo : reportInfo?.filePath;
+           
+           if (!reportPath) {
+               vscode.window.showErrorMessage('Invalid report path provided.');
+               return;
+           }
+           
            const deleted = await htmlReportGenerator.deleteReport(reportPath);
            if (deleted && reportsProvider) {
                reportsProvider.refresh();
@@ -627,6 +635,14 @@ export function activate(context: vscode.ExtensionContext) {
            await vscode.env.openExternal(uri);
        } catch (error) {
            vscode.window.showErrorMessage(`Failed to open reports folder: ${error}`);
+       }
+   });
+   
+   const openTeamLeaderboardCommand = vscode.commands.registerCommand('what-the-code.openTeamLeaderboard', async () => {
+       try {
+           await htmlReportGenerator.openTeamLeaderboard();
+       } catch (error) {
+           vscode.window.showErrorMessage(`Failed to open team leaderboard: ${error}`);
        }
    });
    
@@ -680,6 +696,7 @@ export function activate(context: vscode.ExtensionContext) {
 			   openReportCommand,
 			   deleteReportCommand,
 			   openReportsFolderCommand,
+			   openTeamLeaderboardCommand,
 			   htmlReportGenerator,
 			   reportsProvider
 	   );

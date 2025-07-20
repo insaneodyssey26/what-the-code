@@ -4,6 +4,7 @@ import * as path from 'path';
 import { CodeQualityMetrics, TypeSafetyIssue, RefactoringRecommendation } from './codeQualityAnalyzer';
 import { DeadCodeIssue } from './analyzeDeadCode';
 import { SearchResult } from './types';
+import { TeamLeaderboard } from './teamLeaderboard';
 
 export interface FileAnalysisReport {
     filePath: string;
@@ -33,16 +34,24 @@ export interface ProjectReport {
 export class HTMLReportGenerator {
     private outputChannel: vscode.OutputChannel;
     private reportsPath: string;
+    private teamLeaderboard: TeamLeaderboard;
 
     constructor() {
         this.outputChannel = vscode.window.createOutputChannel('What-The-Code Reports');
+        this.teamLeaderboard = new TeamLeaderboard();
         
-        // Create reports directory in workspace
+        // Create reports directory in workspace, but use file name for file reports
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        this.reportsPath = workspaceFolder 
-            ? path.join(workspaceFolder.uri.fsPath, '.what-the-code-reports')
-            : path.join(require('os').homedir(), '.what-the-code-reports');
-        
+        let reportsBasePath = workspaceFolder 
+            ? path.join(workspaceFolder.uri.fsPath)
+            : path.join(require('os').homedir());
+
+        // Default folder name
+        let reportsFolderName = '.what-the-code-reports';
+
+        // If generating a file report, use the file name as the folder name
+        // Otherwise, fallback to project name for project reports
+        this.reportsPath = path.join(reportsBasePath, reportsFolderName);
         this.ensureReportsDirectory();
     }
 
@@ -77,10 +86,13 @@ export class HTMLReportGenerator {
         };
 
         const htmlContent = this.generateFileHTML(report);
-        const fileName = `file-report-${this.sanitizeFileName(relativePath)}-${Date.now()}.html`;
+        const fileName = this.generateFileReportName(relativePath);
         const reportPath = path.join(this.reportsPath, fileName);
         
         fs.writeFileSync(reportPath, htmlContent, 'utf8');
+        
+        // Update team leaderboard with this report
+        await this.teamLeaderboard.updateContributorStats(report);
         
         this.outputChannel.appendLine(`📄 Report generated: ${reportPath}`);
         return reportPath;
@@ -112,7 +124,7 @@ export class HTMLReportGenerator {
         };
 
         const htmlContent = this.generateProjectHTML(projectReport);
-        const fileName = `project-report-${this.sanitizeFileName(projectName)}-${Date.now()}.html`;
+        const fileName = this.generateProjectReportName(projectName);
         const reportPath = path.join(this.reportsPath, fileName);
         
         fs.writeFileSync(reportPath, htmlContent, 'utf8');
@@ -956,6 +968,59 @@ export class HTMLReportGenerator {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
+    private generateFileReportName(relativePath: string): string {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0].substring(0, 5).replace(':', '-'); // HH-MM
+        
+        // Extract just the file name without path and extension
+        const fileName = path.basename(relativePath, path.extname(relativePath));
+        
+        // Create a shorter, cleaner name (avoid long repetitive names)
+        let cleanFileName = fileName;
+        if (fileName.includes('-')) {
+            // If filename has dashes, take the last meaningful part
+            const parts = fileName.split('-');
+            cleanFileName = parts[parts.length - 1] || parts[0];
+        }
+        
+        // Limit to 15 chars and remove any remaining special characters
+        cleanFileName = cleanFileName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
+        
+        // Fallback if name becomes empty
+        if (!cleanFileName) {
+            cleanFileName = 'file';
+        }
+        
+        return `${cleanFileName}_${dateStr}_${timeStr}.html`;
+    }
+
+    private generateProjectReportName(projectName: string): string {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0].substring(0, 5).replace(':', '-'); // HH-MM
+        
+        // Clean up project name - take last meaningful part if it has dashes
+        let cleanProjectName = projectName;
+        if (projectName.includes('-')) {
+            const parts = projectName.split('-');
+            // Take the last part or 'frontend'/'backend' if present
+            const lastPart = parts[parts.length - 1];
+            const frontendPart = parts.find(p => p.includes('frontend') || p.includes('backend'));
+            cleanProjectName = frontendPart || lastPart || parts[0];
+        }
+        
+        // Limit length and clean
+        cleanProjectName = cleanProjectName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 12);
+        
+        // Fallback if name becomes empty
+        if (!cleanProjectName) {
+            cleanProjectName = 'project';
+        }
+        
+        return `Project_${cleanProjectName}_${dateStr}_${timeStr}.html`;
+    }
+
     private sanitizeFileName(fileName: string): string {
         return fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     }
@@ -980,9 +1045,37 @@ export class HTMLReportGenerator {
         }
     }
 
+    async openTeamLeaderboard(): Promise<void> {
+        try {
+            await this.teamLeaderboard.openLeaderboard();
+        } catch (error) {
+            this.outputChannel.appendLine(`❌ Failed to open team leaderboard: ${error}`);
+            vscode.window.showErrorMessage(`Failed to open team leaderboard: ${error}`);
+        }
+    }
+
     async deleteReport(reportPath: string): Promise<boolean> {
         try {
+            this.outputChannel.appendLine(`🔍 Attempting to delete report: ${reportPath}`);
+            
+            if (!reportPath) {
+                this.outputChannel.appendLine(`❌ No report path provided`);
+                vscode.window.showWarningMessage('No report path provided.');
+                return false;
+            }
+            
             if (!fs.existsSync(reportPath)) {
+                this.outputChannel.appendLine(`❌ Report file does not exist at: ${reportPath}`);
+                this.outputChannel.appendLine(`📁 Reports directory: ${this.reportsPath}`);
+                
+                // List files in reports directory for debugging
+                try {
+                    const files = fs.readdirSync(this.reportsPath);
+                    this.outputChannel.appendLine(`📋 Files in reports directory: ${files.join(', ')}`);
+                } catch (err) {
+                    this.outputChannel.appendLine(`❌ Could not read reports directory: ${err}`);
+                }
+                
                 vscode.window.showWarningMessage('Report file does not exist.');
                 return false;
             }
@@ -990,7 +1083,6 @@ export class HTMLReportGenerator {
             const fileName = path.basename(reportPath);
             const result = await vscode.window.showWarningMessage(
                 `Are you sure you want to delete the report "${fileName}"?`,
-                { modal: true },
                 'Delete',
                 'Cancel'
             );
@@ -1015,5 +1107,6 @@ export class HTMLReportGenerator {
 
     dispose(): void {
         this.outputChannel.dispose();
+        this.teamLeaderboard.dispose();
     }
 }

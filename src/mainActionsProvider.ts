@@ -67,6 +67,13 @@ export class MainActionsProvider implements vscode.TreeDataProvider<ActionItem> 
                     'Configure your API key, model preferences, and other extension settings'
                 ),
                 new ActionItem(
+                    '🏆 Team Leaderboard',
+                    'View team code quality rankings',
+                    'what-the-code.openTeamLeaderboard',
+                    new vscode.ThemeIcon('trophy'),
+                    'View team leaderboard showing code quality improvements and issue resolutions across contributors'
+                ),
+                new ActionItem(
                     '💬 Feedback',
                     'Send feedback or report an issue',
                     'what-the-code.openFeedback',
